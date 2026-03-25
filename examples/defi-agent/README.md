@@ -67,9 +67,3 @@ python server.py
 | `agent.js` | DeFiAgent class:orchestration logic |
 | `index.html` | Chat UI with wallet integration |
 | `agent.json` | Agent capabilities manifest |
-
-## What the Engine Supports
-
-45 actions across 12 protocols: Aave V3, Lido, Uniswap V3, Curve, Compound V3, MakerDAO DSR, Rocket Pool, EigenLayer, Balancer V2, WETH, ERC-20, ERC-721.
-
-The engine handles token resolution, amount conversion, ABI encoding, approval generation, and USDT special cases:all deterministically, with zero LLM tokens.
