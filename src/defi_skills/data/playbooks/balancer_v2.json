@@ -1,0 +1,250 @@
+{
+  "protocol": "balancer_v2",
+  "version": "1.0",
+  "chain_id": 1,
+
+  "contracts": {
+    "vault": {
+      "address": "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
+      "abi_source": "etherscan_cache"
+    }
+  },
+
+  "actions": {
+    "balancer_swap": {
+      "description": "Swap tokens via Balancer V2 Vault single swap",
+      "target_contract": "vault",
+      "function_name": "swap",
+      "function_selector": "0x52bbbe29",
+      "abi_source": "etherscan_cache",
+      "value_logic": { "type": "zero" },
+      "approvals": [{ "token": "$__token_in_address", "spender": "target_contract" }],
+      "required_payload_args": ["__token_in_address", "__token_out_address", "amount", "recipient", "deadline", "human_readable_amount"],
+
+      "payload_args": {
+        "__token_in_address": {
+          "source": "resolve_token_address",
+          "llm_field": "asset_in",
+          "eth_alias": "WETH"
+        },
+        "__token_out_address": {
+          "source": "resolve_token_address",
+          "llm_field": "asset_out",
+          "eth_alias": "WETH"
+        },
+        "poolId": {
+          "source": "resolve_balancer_pool_id",
+          "subgraph_id": "C4ayEZP2yTXRAB8vSaTrgN4m9anTe9Mdm2ViyiAuV9TV"
+        },
+        "amount": {
+          "source": "resolve_amount_or_balance",
+          "llm_field": "amount",
+          "fallback_llm_fields": ["amount"],
+          "decimals_from": "$asset_in",
+          "balance_of": "$__token_in_address"
+        },
+        "recipient": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "to",
+          "context_field": "from_address"
+        },
+        "sender": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "sender",
+          "context_field": "from_address"
+        },
+        "deadline": {
+          "source": "resolve_deadline",
+          "buffer_seconds": 1200
+        },
+        "slippage": {
+          "source": "llm_passthrough",
+          "llm_field": "slippage",
+          "optional": true
+        },
+        "limit": {
+          "source": "resolve_balancer_limit",
+          "slippage_bps": 50,
+          "vault_address": "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "Swap {amount} ({asset_in} -> {asset_out})"
+        }
+      },
+
+      "param_mapping": [
+        {
+          "name": "singleSwap",
+          "source": "struct",
+          "fields": [
+            { "name": "poolId", "source": "arg", "arg_key": "poolId", "coerce": "bytes32" },
+            { "name": "kind", "source": "constant", "value": 0, "coerce": "uint256" },
+            { "name": "assetIn", "source": "arg", "arg_key": "__token_in_address", "coerce": "address" },
+            { "name": "assetOut", "source": "arg", "arg_key": "__token_out_address", "coerce": "address" },
+            { "name": "amount", "source": "arg", "arg_key": "amount", "coerce": "uint256" },
+            { "name": "userData", "source": "constant", "value": "0x", "coerce": "bytes" }
+          ]
+        },
+        {
+          "name": "funds",
+          "source": "struct",
+          "fields": [
+            { "name": "sender", "source": "arg", "arg_key": "sender", "coerce": "address" },
+            { "name": "fromInternalBalance", "source": "constant", "value": false, "coerce": "bool" },
+            { "name": "recipient", "source": "arg", "arg_key": "recipient", "coerce": "address" },
+            { "name": "toInternalBalance", "source": "constant", "value": false, "coerce": "bool" }
+          ]
+        },
+        { "name": "limit", "source": "arg", "arg_key": "limit", "coerce": "uint256" },
+        { "name": "deadline", "source": "arg", "arg_key": "deadline", "coerce": "uint256" }
+      ]
+    },
+
+    "balancer_join_pool": {
+      "description": "Add liquidity to a Balancer V2 pool (single token join)",
+      "target_contract": "vault",
+      "function_name": "joinPool",
+      "function_selector": "0xb95cac28",
+      "abi_source": "etherscan_cache",
+      "value_logic": { "type": "zero" },
+      "approvals": [{ "token": "$__token_in_address", "spender": "target_contract" }],
+      "required_payload_args": ["__token_in_address", "__token_out_address", "poolId", "__pool_tokens", "amount", "__userData", "sender", "recipient", "human_readable_amount"],
+
+      "payload_args": {
+        "__token_in_address": {
+          "source": "resolve_token_address",
+          "llm_field": "asset",
+          "eth_alias": "WETH"
+        },
+        "__token_out_address": {
+          "source": "resolve_token_address",
+          "llm_field": "asset_b",
+          "fallback_llm_fields": ["pool_token"],
+          "eth_alias": "WETH"
+        },
+        "poolId": {
+          "source": "resolve_balancer_pool_id",
+          "subgraph_id": "C4ayEZP2yTXRAB8vSaTrgN4m9anTe9Mdm2ViyiAuV9TV"
+        },
+        "__pool_tokens": {
+          "source": "resolve_balancer_pool_tokens",
+          "vault_address": "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+        },
+        "amount": {
+          "source": "resolve_amount_or_balance",
+          "llm_field": "amount",
+          "fallback_llm_fields": ["amount"],
+          "decimals_from": "$asset",
+          "balance_of": "$__token_in_address"
+        },
+        "__userData": {
+          "source": "resolve_balancer_userdata",
+          "mode": "join"
+        },
+        "sender": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "sender",
+          "context_field": "from_address"
+        },
+        "recipient": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "to",
+          "context_field": "from_address"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "{amount} {asset} to Balancer pool"
+        }
+      },
+
+      "param_mapping": [
+        { "name": "poolId", "source": "arg", "arg_key": "poolId", "coerce": "bytes32" },
+        { "name": "sender", "source": "arg", "arg_key": "sender", "coerce": "address" },
+        { "name": "recipient", "source": "arg", "arg_key": "recipient", "coerce": "address" },
+        {
+          "name": "request",
+          "source": "struct",
+          "fields": [
+            { "name": "assets", "source": "arg", "arg_key": "__pool_tokens", "coerce": "address_array" },
+            { "name": "maxAmountsIn", "source": "arg", "arg_key": "__maxAmountsIn", "coerce": "uint256_array" },
+            { "name": "userData", "source": "arg", "arg_key": "__userData", "coerce": "bytes" },
+            { "name": "fromInternalBalance", "source": "constant", "value": false, "coerce": "bool" }
+          ]
+        }
+      ]
+    },
+
+    "balancer_exit_pool": {
+      "description": "Remove liquidity from a Balancer V2 pool (exit to single token)",
+      "target_contract": "vault",
+      "function_name": "exitPool",
+      "function_selector": "0x8bdb3913",
+      "abi_source": "etherscan_cache",
+      "value_logic": { "type": "zero" },
+      "required_payload_args": ["__token_out_address", "__token_in_address", "poolId", "__pool_tokens", "amount", "__userData", "sender", "recipient", "human_readable_amount"],
+
+      "payload_args": {
+        "__token_out_address": {
+          "source": "resolve_token_address",
+          "llm_field": "asset",
+          "eth_alias": "WETH"
+        },
+        "__token_in_address": {
+          "source": "resolve_token_address",
+          "llm_field": "asset_b",
+          "fallback_llm_fields": ["pool_token"],
+          "eth_alias": "WETH"
+        },
+        "poolId": {
+          "source": "resolve_balancer_pool_id",
+          "subgraph_id": "C4ayEZP2yTXRAB8vSaTrgN4m9anTe9Mdm2ViyiAuV9TV"
+        },
+        "__pool_tokens": {
+          "source": "resolve_balancer_pool_tokens",
+          "vault_address": "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+        },
+        "amount": {
+          "source": "resolve_amount_or_balance",
+          "llm_field": "amount",
+          "fallback_llm_fields": ["amount"],
+          "decimals_from": 18
+        },
+        "__userData": {
+          "source": "resolve_balancer_userdata",
+          "mode": "exit"
+        },
+        "sender": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "sender",
+          "context_field": "from_address"
+        },
+        "recipient": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "to",
+          "context_field": "from_address"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "{amount} BPT from Balancer pool"
+        }
+      },
+
+      "param_mapping": [
+        { "name": "poolId", "source": "arg", "arg_key": "poolId", "coerce": "bytes32" },
+        { "name": "sender", "source": "arg", "arg_key": "sender", "coerce": "address" },
+        { "name": "recipient", "source": "arg", "arg_key": "recipient", "coerce": "address" },
+        {
+          "name": "request",
+          "source": "struct",
+          "fields": [
+            { "name": "assets", "source": "arg", "arg_key": "__pool_tokens", "coerce": "address_array" },
+            { "name": "minAmountsOut", "source": "constant", "value": [0, 0], "coerce": "uint256_array" },
+            { "name": "userData", "source": "arg", "arg_key": "__userData", "coerce": "bytes" },
+            { "name": "toInternalBalance", "source": "constant", "value": false, "coerce": "bool" }
+          ]
+        }
+      ]
+    }
+  }
+}

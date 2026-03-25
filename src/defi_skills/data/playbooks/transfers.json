@@ -1,0 +1,153 @@
+{
+  "protocol": "transfers",
+  "version": "1.0",
+  "chain_id": 1,
+
+  "contracts": {},
+
+  "standard_abis": {
+    "erc20_transfer": {
+      "name": "transfer",
+      "type": "function",
+      "inputs": [
+        { "name": "to", "type": "address" },
+        { "name": "value", "type": "uint256" }
+      ]
+    },
+    "erc721_transferFrom": {
+      "name": "transferFrom",
+      "type": "function",
+      "inputs": [
+        { "name": "from", "type": "address" },
+        { "name": "to", "type": "address" },
+        { "name": "tokenId", "type": "uint256" }
+      ]
+    },
+    "cryptopunks_transferPunk": {
+      "name": "transferPunk",
+      "type": "function",
+      "inputs": [
+        { "name": "to", "type": "address" },
+        { "name": "punkIndex", "type": "uint256" }
+      ]
+    }
+  },
+
+  "actions": {
+    "transfer_native": {
+      "description": "Send native ETH to an address",
+      "target_contract": null,
+      "function_name": null,
+      "abi_source": "none",
+      "value_logic": {
+        "type": "from_arg",
+        "source_arg": "value"
+      },
+      "required_payload_args": ["to", "value", "human_readable_amount"],
+
+      "payload_args": {
+        "to": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "to"
+        },
+        "value": {
+          "source": "resolve_amount_or_balance",
+          "llm_field": "amount",
+          "fallback_llm_fields": ["value"],
+          "decimals_from": "$native",
+          "balance_of": "$native"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "{amount} ETH"
+        }
+      },
+
+      "param_mapping": []
+    },
+
+    "transfer_erc20": {
+      "description": "Transfer ERC-20 tokens",
+      "target_contract": "$token_address",
+      "function_name": "transfer",
+      "abi_source": "standard",
+      "standard_abi_key": "erc20_transfer",
+      "value_logic": { "type": "zero" },
+      "required_payload_args": ["to", "value", "human_readable_amount"],
+
+      "payload_args": {
+        "__token_address": {
+          "source": "resolve_token_address",
+          "llm_field": "asset"
+        },
+        "to": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "to"
+        },
+        "value": {
+          "source": "resolve_amount_or_balance",
+          "llm_field": "amount",
+          "fallback_llm_fields": ["value"],
+          "decimals_from": "$asset",
+          "balance_of": "$__token_address"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "{amount} {asset}"
+        }
+      },
+
+      "param_mapping": [
+        { "name": "to",    "source": "arg", "arg_key": "to",    "coerce": "address" },
+        { "name": "value", "source": "arg", "arg_key": "value", "coerce": "uint256" }
+      ]
+    },
+
+    "transfer_erc721": {
+      "description": "Transfer ERC-721 NFT",
+      "target_contract": "$collection_address",
+      "function_name": "transferFrom",
+      "abi_source": "standard",
+      "standard_abi_key": "erc721_transferFrom",
+      "value_logic": { "type": "zero" },
+      "required_payload_args": ["to", "tokenId", "human_readable_amount"],
+
+      "function_overrides": {
+        "0xb47e3cd837ddf8e4c57f05d70ab865de6e193bbb": {
+          "function_name": "transferPunk",
+          "standard_abi_key": "cryptopunks_transferPunk",
+          "param_mapping": [
+            { "name": "to",        "source": "arg",     "arg_key": "to",      "coerce": "address" },
+            { "name": "punkIndex", "source": "arg",     "arg_key": "tokenId", "coerce": "uint256" }
+          ]
+        }
+      },
+
+      "payload_args": {
+        "__collection_address": {
+          "source": "resolve_collection_address",
+          "llm_field": "collection",
+          "fallback_llm_fields": ["asset"]
+        },
+        "to": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "to"
+        },
+        "tokenId": {
+          "source": "llm_passthrough",
+          "llm_field": "tokenId"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "Token #{tokenId}"
+        }
+      },
+
+      "param_mapping": [
+        { "name": "from",    "source": "context", "context_key": "from_address", "coerce": "address" },
+        { "name": "to",      "source": "arg",     "arg_key": "to",              "coerce": "address" },
+        { "name": "tokenId", "source": "arg",     "arg_key": "tokenId",         "coerce": "uint256" }
+      ]
+    }
+  }
+}

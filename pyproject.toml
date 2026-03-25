@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "defi-skills"
+version = "0.1.0"
+description = "Hybrid LLM + deterministic engine for translating natural language to raw Ethereum transactions"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+dependencies = [
+    "litellm>=1.30.0",
+    "web3>=6.0.0",
+    "eth-abi>=5.0.0",
+    "eth-utils>=2.3.0",
+    "python-dotenv>=1.0.0",
+    "requests>=2.31.0",
+    "click>=8.0.0",
+    "rich>=13.0.0",
+    "prompt-toolkit>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+]
+
+[project.scripts]
+defi-skills = "defi_skills.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["defi_skills*"]
+
+[tool.setuptools.package-data]
+"defi_skills.data" = ["playbooks/*.json", "cache/*.json", "abi_cache/*.json", "registry/*.json"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,89 @@
+{
+  "protocol": "maker_dsr",
+  "version": "1.0",
+  "chain_id": 1,
+
+  "contracts": {
+    "sdai": {
+      "address": "0x83F20F44975D03b1b09e64809B757c47f942BeeA",
+      "abi_source": "etherscan_cache"
+    }
+  },
+
+  "actions": {
+    "maker_deposit": {
+      "description": "Deposit DAI into MakerDAO DSR (receive sDAI)",
+      "target_contract": "sdai",
+      "function_name": "deposit",
+      "function_selector": "0x6e553f65",
+      "abi_source": "etherscan_cache",
+      "value_logic": { "type": "zero" },
+      "approvals": [{ "token": "0x6B175474E89094C44Da98b954EedeAC495271d0F", "spender": "target_contract" }],
+      "required_payload_args": ["assets", "receiver", "human_readable_amount"],
+
+      "payload_args": {
+        "assets": {
+          "source": "resolve_amount_or_balance",
+          "llm_field": "amount",
+          "fallback_llm_fields": ["assets", "amount"],
+          "decimals_from": 18,
+          "balance_of": "0x6B175474E89094C44Da98b954EedeAC495271d0F"
+        },
+        "receiver": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "receiver",
+          "context_field": "from_address"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "{amount} DAI"
+        }
+      },
+
+      "param_mapping": [
+        { "name": "assets", "source": "arg", "arg_key": "assets", "coerce": "uint256" },
+        { "name": "receiver", "source": "arg", "arg_key": "receiver", "coerce": "address" }
+      ]
+    },
+
+    "maker_redeem": {
+      "description": "Redeem sDAI for DAI from MakerDAO DSR",
+      "target_contract": "sdai",
+      "function_name": "redeem",
+      "function_selector": "0xba087652",
+      "abi_source": "etherscan_cache",
+      "value_logic": { "type": "zero" },
+      "required_payload_args": ["shares", "receiver", "owner", "human_readable_amount"],
+
+      "payload_args": {
+        "shares": {
+          "source": "resolve_amount_or_balance",
+          "llm_field": "amount",
+          "fallback_llm_fields": ["shares", "amount"],
+          "decimals_from": 18,
+          "balance_of": "0x83F20F44975D03b1b09e64809B757c47f942BeeA"
+        },
+        "receiver": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "receiver",
+          "context_field": "from_address"
+        },
+        "owner": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "owner",
+          "context_field": "from_address"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "{amount} sDAI"
+        }
+      },
+
+      "param_mapping": [
+        { "name": "shares", "source": "arg", "arg_key": "shares", "coerce": "uint256" },
+        { "name": "receiver", "source": "arg", "arg_key": "receiver", "coerce": "address" },
+        { "name": "owner", "source": "arg", "arg_key": "owner", "coerce": "address" }
+      ]
+    }
+  }
+}

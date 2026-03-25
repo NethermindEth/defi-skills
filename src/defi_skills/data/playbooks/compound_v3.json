@@ -1,0 +1,181 @@
+{
+  "protocol": "compound_v3",
+  "version": "1.0",
+  "chain_id": 1,
+
+  "contracts": {
+    "comet_usdc": {
+      "address": "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
+      "abi_source": "etherscan_cache"
+    },
+    "comet_rewards": {
+      "address": "0x1B0e765F6224C21223AeA2af16c1C46E38885a40",
+      "abi_source": "etherscan_cache"
+    }
+  },
+
+  "actions": {
+    "compound_supply": {
+      "description": "Supply asset to Compound V3 (Comet USDC market)",
+      "valid_tokens": ["USDC", "WETH", "WBTC", "COMP", "UNI", "LINK"],
+      "target_contract": "comet_usdc",
+      "function_name": "supply",
+      "function_selector": "0xf2b9fdb8",
+      "abi_source": "etherscan_cache",
+      "value_logic": { "type": "zero" },
+      "approvals": [{ "token": "$__token_address", "spender": "target_contract" }],
+      "required_payload_args": ["__token_address", "amount", "human_readable_amount"],
+
+      "payload_args": {
+        "__token_address": {
+          "source": "resolve_token_address",
+          "llm_field": "asset"
+        },
+        "amount": {
+          "source": "resolve_amount_or_balance",
+          "llm_field": "amount",
+          "fallback_llm_fields": ["amount"],
+          "decimals_from": "$asset",
+          "balance_of": "$__token_address"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "{amount} {asset}"
+        }
+      },
+
+      "param_mapping": [
+        { "name": "asset", "source": "arg", "arg_key": "__token_address", "coerce": "address" },
+        { "name": "amount", "source": "arg", "arg_key": "amount", "coerce": "uint256" }
+      ]
+    },
+
+    "compound_withdraw": {
+      "description": "Withdraw asset from Compound V3 (Comet USDC market)",
+      "valid_tokens": ["USDC", "WETH", "WBTC", "COMP", "UNI", "LINK"],
+      "target_contract": "comet_usdc",
+      "function_name": "withdraw",
+      "function_selector": "0xf3fef3a3",
+      "abi_source": "etherscan_cache",
+      "value_logic": { "type": "zero" },
+      "required_payload_args": ["__token_address", "amount", "human_readable_amount"],
+
+      "payload_args": {
+        "__token_address": {
+          "source": "resolve_token_address",
+          "llm_field": "asset"
+        },
+        "amount": {
+          "source": "resolve_amount_or_max",
+          "llm_field": "amount",
+          "fallback_llm_fields": ["amount"],
+          "decimals_from": "$asset"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "{amount} {asset}"
+        }
+      },
+
+      "param_mapping": [
+        { "name": "asset", "source": "arg", "arg_key": "__token_address", "coerce": "address" },
+        { "name": "amount", "source": "arg", "arg_key": "amount", "coerce": "uint256" }
+      ]
+    },
+
+    "compound_borrow": {
+      "description": "Borrow base asset from Compound V3 (equivalent to withdraw of base asset)",
+      "valid_tokens": ["USDC"],
+      "target_contract": "comet_usdc",
+      "function_name": "withdraw",
+      "function_selector": "0xf3fef3a3",
+      "abi_source": "etherscan_cache",
+      "value_logic": { "type": "zero" },
+      "required_payload_args": ["__token_address", "amount", "human_readable_amount"],
+
+      "payload_args": {
+        "__token_address": {
+          "source": "resolve_token_address",
+          "llm_field": "asset"
+        },
+        "amount": {
+          "source": "resolve_amount",
+          "llm_field": "amount",
+          "fallback_llm_fields": ["amount"],
+          "decimals_from": "$asset"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "{amount} {asset}"
+        }
+      },
+
+      "param_mapping": [
+        { "name": "asset", "source": "arg", "arg_key": "__token_address", "coerce": "address" },
+        { "name": "amount", "source": "arg", "arg_key": "amount", "coerce": "uint256" }
+      ]
+    },
+
+    "compound_repay": {
+      "description": "Repay borrowed asset on Compound V3 (equivalent to supply of base asset)",
+      "valid_tokens": ["USDC"],
+      "target_contract": "comet_usdc",
+      "function_name": "supply",
+      "function_selector": "0xf2b9fdb8",
+      "abi_source": "etherscan_cache",
+      "value_logic": { "type": "zero" },
+      "approvals": [{ "token": "$__token_address", "spender": "target_contract" }],
+      "required_payload_args": ["__token_address", "amount", "human_readable_amount"],
+
+      "payload_args": {
+        "__token_address": {
+          "source": "resolve_token_address",
+          "llm_field": "asset"
+        },
+        "amount": {
+          "source": "resolve_amount_or_max",
+          "llm_field": "amount",
+          "fallback_llm_fields": ["amount"],
+          "decimals_from": "$asset"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "{amount} {asset}"
+        }
+      },
+
+      "param_mapping": [
+        { "name": "asset", "source": "arg", "arg_key": "__token_address", "coerce": "address" },
+        { "name": "amount", "source": "arg", "arg_key": "amount", "coerce": "uint256" }
+      ]
+    },
+
+    "compound_claim_rewards": {
+      "description": "Claim COMP rewards from Compound V3",
+      "target_contract": "comet_rewards",
+      "function_name": "claim",
+      "function_selector": "0xb7034f7e",
+      "abi_source": "etherscan_cache",
+      "value_logic": { "type": "zero" },
+      "required_payload_args": ["src", "human_readable_amount"],
+
+      "payload_args": {
+        "src": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "src",
+          "context_field": "from_address"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "COMP rewards"
+        }
+      },
+
+      "param_mapping": [
+        { "name": "comet", "source": "constant", "value": "0xc3d688B66703497DAA19211EEdff47f25384cdc3", "coerce": "address" },
+        { "name": "src", "source": "arg", "arg_key": "src", "coerce": "address" },
+        { "name": "shouldAccrue", "source": "constant", "value": true, "coerce": "bool" }
+      ]
+    }
+  }
+}

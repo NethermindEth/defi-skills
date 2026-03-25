@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="DeFi Agent — natural language to Ethereum transactions">
+<meta name="theme-color" content="#0f1117">
+<title>DeFi Agent — DefiSkills</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='16' fill='%2338bdf8'/><text y='72' x='14' font-size='60' font-family='system-ui' font-weight='700' fill='%230f1117'>aw</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   DESIGN TOKENS
+   ═══════════════════════════════════════════════════════════════ */
+:root {
+  --bg-0: #0f1117;
+  --bg-1: #161922;
+  --bg-2: #1e2230;
+  --bg-3: #272c3d;
+  --border-0: #2a2f40;
+  --border-1: #363d52;
+
+  --text-0: #f1f3f8;
+  --text-1: #b8bfd0;
+  --text-2: #8891a6;
+
+  --accent: #38bdf8;
+  --accent-dim: rgba(56, 189, 248, 0.1);
+  --accent-mid: rgba(56, 189, 248, 0.18);
+
+  --ok: #34d399;
+  --ok-dim: rgba(52, 211, 153, 0.1);
+  --ok-mid: rgba(52, 211, 153, 0.15);
+
+  --warn: #fbbf24;
+  --warn-dim: rgba(251, 191, 36, 0.1);
+
+  --err: #f87171;
+  --err-dim: rgba(248, 113, 113, 0.1);
+
+  --purple: #a78bfa;
+  --purple-dim: rgba(167, 139, 250, 0.1);
+
+  --sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'DM Mono', 'SF Mono', Consolas, monospace;
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════════════════════════ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { height: 100%; }
+body {
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-1);
+  background: var(--bg-0);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Focus ring — visible on keyboard only */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+:focus:not(:focus-visible) { outline: none; }
+
+/* Custom scrollbar */
+.scr::-webkit-scrollbar { width: 5px; }
+.scr::-webkit-scrollbar-track { background: transparent; }
+.scr::-webkit-scrollbar-thumb { background: var(--border-0); border-radius: 3px; }
+.scr::-webkit-scrollbar-thumb:hover { background: var(--border-1); }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════════════ */
+@keyframes enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+
+.anim-enter { animation: enter .25s cubic-bezier(.16,1,.3,1) both; }
+.anim-pulse { animation: pulse 1.6s ease-in-out infinite; }
+
+/* ═══════════════════════════════════════════════════════════════
+   LAYOUT
+   ═══════════════════════════════════════════════════════════════ */
+.header {
+  background: var(--bg-1);
+  border-bottom: 1px solid var(--border-0);
+  position: sticky; top: 0; z-index: 40;
+}
+.header-inner {
+  max-width: 720px; margin: 0 auto;
+  padding: 0 20px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.logo { display: flex; align-items: center; gap: 10px; }
+.logo-mark {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: var(--accent);
+  display: grid; place-items: center;
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  color: var(--bg-0); letter-spacing: -0.5px;
+}
+.logo-text { font-weight: 600; font-size: 15px; color: var(--text-0); }
+.logo-badge {
+  font-family: var(--mono); font-size: 11px; color: var(--text-2);
+  background: var(--bg-2); border: 1px solid var(--border-0);
+  padding: 2px 8px; border-radius: 20px; margin-left: 4px;
+}
+
+/* Portfolio strip */
+.portfolio {
+  background: var(--bg-1); border-bottom: 1px solid var(--border-0);
+  overflow-x: auto; display: none;
+}
+.portfolio.show { display: block; }
+.portfolio-inner {
+  max-width: 720px; margin: 0 auto; padding: 10px 20px;
+  display: flex; align-items: center; gap: 8px;
+}
+.portfolio-label {
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  color: var(--text-2); text-transform: uppercase; letter-spacing: .5px;
+  white-space: nowrap;
+}
+.bal-chip {
+  display: flex; align-items: baseline; gap: 5px;
+  background: var(--bg-0); border: 1px solid var(--border-0);
+  padding: 4px 10px; border-radius: 20px; white-space: nowrap;
+}
+.bal-val { font-size: 13px; font-weight: 600; color: var(--text-0); font-variant-numeric: tabular-nums; }
+.bal-sym { font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+
+/* Chat area */
+.chat-wrap { flex: 1; overflow-y: auto; }
+.chat {
+  max-width: 720px; margin: 0 auto; padding: 24px 20px 16px;
+  min-height: 100%; display: flex; flex-direction: column; justify-content: flex-end;
+  gap: 16px;
+}
+
+/* Input bar */
+.input-bar {
+  background: var(--bg-1); border-top: 1px solid var(--border-0);
+  padding: 12px 20px; flex-shrink: 0;
+}
+.input-inner {
+  max-width: 720px; margin: 0 auto;
+  display: flex; gap: 8px;
+}
+.input-field {
+  flex: 1; background: var(--bg-0); border: 1px solid var(--border-0);
+  border-radius: var(--radius); padding: 12px 16px;
+  font-family: var(--sans); font-size: 14px; color: var(--text-0);
+  transition: border-color .15s;
+}
+.input-field::placeholder { color: var(--text-2); }
+.input-field:focus { border-color: var(--accent); outline: none; }
+.input-field:disabled { opacity: .4; cursor: not-allowed; }
+.input-field:disabled::placeholder { color: var(--text-2); }
+
+/* Activity log */
+.log-bar {
+  background: var(--bg-1); border-top: 1px solid var(--border-0);
+  flex-shrink: 0;
+}
+.log-toggle {
+  width: 100%; padding: 8px 20px; border: none; background: none;
+  display: flex; align-items: center; gap: 6px; cursor: pointer;
+  font-family: var(--mono); font-size: 11px; color: var(--text-2);
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.log-toggle:hover { color: var(--text-1); }
+.log-arrow { transition: transform .2s; font-size: 8px; }
+.log-count { color: var(--accent); margin-left: 2px; }
+.log-panel {
+  display: none; max-height: 200px; overflow-y: auto;
+  padding: 0 20px 10px;
+}
+.log-panel.open { display: block; }
+.log-entry { font-family: var(--mono); font-size: 11px; line-height: 1.7; }
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTONS
+   ═══════════════════════════════════════════════════════════════ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; min-height: 44px; padding: 0 20px;
+  font-family: var(--sans); font-size: 13px; font-weight: 600;
+  border: 1px solid transparent; border-radius: var(--radius);
+  cursor: pointer; transition: all .15s; white-space: nowrap;
+}
+.btn:disabled { opacity: .35; cursor: not-allowed; }
+
+.btn-accent {
+  background: var(--accent-dim); color: var(--accent);
+  border-color: rgba(56,189,248,.2);
+}
+.btn-accent:hover:not(:disabled) { background: var(--accent-mid); }
+
+.btn-ok {
+  background: var(--ok-dim); color: var(--ok);
+  border-color: rgba(52,211,153,.2);
+}
+.btn-ok:hover:not(:disabled) { background: var(--ok-mid); }
+
+.btn-ghost {
+  background: var(--bg-2); color: var(--text-1);
+  border-color: var(--border-0);
+}
+.btn-ghost:hover:not(:disabled) { background: var(--bg-3); border-color: var(--border-1); }
+
+.btn-sm { min-height: 36px; padding: 0 14px; font-size: 12px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   MESSAGES
+   ═══════════════════════════════════════════════════════════════ */
+.msg { display: flex; }
+.msg-user { justify-content: flex-end; }
+.msg-agent { justify-content: flex-start; }
+
+.bubble {
+  max-width: min(520px, 85%); border-radius: var(--radius);
+  padding: 12px 16px; font-size: 14px; line-height: 1.6;
+}
+.bubble-user {
+  background: var(--accent-dim); border: 1px solid rgba(56,189,248,.15);
+  color: var(--text-0);
+}
+.bubble-agent {
+  background: var(--bg-1); border: 1px solid var(--border-0);
+  color: var(--text-1);
+}
+.bubble-agent strong { color: var(--text-0); }
+.bubble-agent em { font-style: italic; }
+.bubble-agent code {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg-0); border: 1px solid var(--border-0);
+  padding: 1px 5px; border-radius: 4px;
+}
+.bubble-agent ul { margin: 6px 0 6px 16px; padding: 0; list-style: disc; }
+.bubble-agent li { margin: 2px 0; font-size: 13px; }
+
+/* Status indicator */
+.status-line {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 12px; padding: 2px 0;
+}
+.status-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STEP CARDS
+   ═══════════════════════════════════════════════════════════════ */
+.step-card {
+  border: 1px solid var(--border-0); border-radius: var(--radius);
+  overflow: hidden; margin-bottom: 8px;
+}
+.step-header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px; background: var(--bg-2);
+  border-bottom: 1px solid var(--border-0);
+}
+.step-num {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  background: var(--accent-dim); color: var(--accent);
+  padding: 2px 7px; border-radius: 4px; letter-spacing: .3px;
+}
+.step-action { font-size: 13px; font-weight: 600; color: var(--text-0); }
+.step-body { padding: 10px 12px; }
+.step-desc { font-size: 13px; color: var(--text-1); margin-bottom: 6px; }
+.step-args { display: flex; flex-wrap: wrap; gap: 4px; }
+.arg-chip {
+  font-family: var(--mono); font-size: 11px;
+  background: var(--bg-0); border: 1px solid var(--border-0);
+  padding: 2px 8px; border-radius: 4px;
+}
+.arg-key { color: var(--text-2); }
+.arg-val { color: var(--warn); }
+
+/* Dependency badge */
+.dep-badge {
+  font-family: var(--mono); font-size: 10px;
+  background: var(--purple-dim); color: var(--purple);
+  padding: 2px 7px; border-radius: 4px; letter-spacing: .3px;
+  margin-left: auto;
+}
+
+/* Goal execution states */
+.goal-status {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--text-2);
+  margin-top: 8px; min-height: 18px;
+}
+.goal-status:empty { display: none; }
+.goal-status .tx-link {
+  font-family: var(--mono); font-size: 11px;
+  color: var(--accent); text-decoration: none;
+}
+.goal-status .tx-link:hover { text-decoration: underline; }
+
+.step-card.goal-building { border-color: var(--accent); }
+.step-card.goal-observing { border-color: var(--purple); }
+.step-card.goal-signing { border-color: var(--warn); }
+.step-card.goal-confirmed { border-color: var(--ok); background: var(--ok-dim); }
+.step-card.goal-failed { border-color: var(--err); background: var(--err-dim); }
+
+/* Transaction summary */
+.tx-summary {
+  display: flex; align-items: center; gap: 12px;
+  padding-top: 10px; margin-top: 10px;
+  border-top: 1px solid var(--border-0);
+  font-family: var(--mono); font-size: 12px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TX CARDS
+   ═══════════════════════════════════════════════════════════════ */
+.tx-card {
+  border: 1px solid var(--border-0); border-radius: var(--radius-sm);
+  padding: 10px 12px; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 8px;
+  transition: border-color .2s, background .2s;
+}
+.tx-card[data-status="pending"] { border-color: var(--border-0); }
+.tx-card[data-status="signing"] { border-color: var(--accent); background: var(--accent-dim); }
+.tx-card[data-status="confirmed"] { border-color: var(--ok); background: var(--ok-dim); }
+.tx-card[data-status="failed"] { border-color: var(--err); background: var(--err-dim); }
+
+.tx-icon { width: 18px; height: 18px; flex-shrink: 0; display: grid; place-items: center; font-size: 12px; }
+.tx-label { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--text-0); flex: 1; }
+.tx-status { font-family: var(--mono); font-size: 11px; color: var(--text-2); }
+.tx-link {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  margin-top: 4px; display: block;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   WELCOME / ONBOARDING
+   ═══════════════════════════════════════════════════════════════ */
+.welcome {
+  background: var(--bg-1); border: 1px solid var(--border-0);
+  border-radius: var(--radius); padding: 20px;
+  max-width: min(520px, 85%);
+}
+.welcome h2 { font-size: 16px; font-weight: 700; color: var(--text-0); margin-bottom: 6px; }
+.welcome p { font-size: 13px; color: var(--text-1); margin-bottom: 12px; }
+.prompt-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.prompt-chip {
+  font-size: 12px; color: var(--text-1); background: var(--bg-2);
+  border: 1px solid var(--border-0); padding: 6px 12px;
+  border-radius: 20px; cursor: pointer; transition: all .15s;
+}
+.prompt-chip:hover { color: var(--text-0); border-color: var(--accent); background: var(--accent-dim); }
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+  .header-inner { padding: 0 12px; }
+  .logo-badge { display: none; }
+  .chat { padding: 16px 12px 12px; }
+  .input-bar { padding: 10px 12px; }
+  .bubble { max-width: 92%; }
+  .portfolio-inner { padding: 8px 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header class="header">
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-mark">aw</div>
+      <span class="logo-text">DefiSkills</span>
+      <span class="logo-badge">mainnet</span>
+    </div>
+    <button id="btn-connect" class="btn btn-accent btn-sm" onclick="handleConnect()" aria-label="Connect wallet">
+      Connect Wallet
+    </button>
+  </div>
+</header>
+
+<!-- ═══ PORTFOLIO ═══ -->
+<div id="portfolio" class="portfolio scr" role="region" aria-label="Portfolio balances">
+  <div class="portfolio-inner">
+    <span class="portfolio-label">Balances</span>
+    <div id="balance-cards" style="display:flex;gap:6px;"></div>
+  </div>
+</div>
+
+<!-- ═══ CHAT ═══ -->
+<div id="chat-scroll" class="chat-wrap scr" role="log" aria-live="polite" aria-label="Conversation">
+  <div id="chat" class="chat">
+
+    <!-- Welcome -->
+    <div class="msg msg-agent anim-enter">
+      <div class="welcome">
+        <h2>What would you like to do?</h2>
+        <p>Describe any DeFi action in plain English. I'll build the transaction, you sign it.</p>
+        <div class="prompt-chips" id="prompt-chips">
+          <button class="prompt-chip" onclick="fillPrompt(this)">Stake 10 ETH on Lido</button>
+          <button class="prompt-chip" onclick="fillPrompt(this)">Swap 500 USDC for WETH</button>
+          <button class="prompt-chip" onclick="fillPrompt(this)">Supply 1000 DAI to Aave</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ INPUT ═══ -->
+<div class="input-bar">
+  <form id="input-form" onsubmit="handleSend(event)" class="input-inner">
+    <input id="msg-input" type="text" class="input-field"
+      placeholder="Connect wallet to start..."
+      autocomplete="off" disabled
+      aria-label="Message input">
+    <button type="submit" id="btn-send" class="btn btn-ok btn-sm" disabled aria-label="Send message">
+      Send
+    </button>
+  </form>
+</div>
+
+<!-- ═══ ACTIVITY LOG ═══ -->
+<div class="log-bar">
+  <button class="log-toggle" onclick="toggleLog()" aria-expanded="false" aria-controls="log-panel">
+    <span class="log-arrow" id="log-arrow">&#9654;</span>
+    Activity Log
+    <span class="log-count" id="log-count">0</span>
+  </button>
+  <div id="log-panel" class="log-panel scr" role="log">
+    <div id="log-entries"></div>
+  </div>
+</div>
+
+<!-- ═══ SCRIPTS ═══ -->
+<script src="agent.js?v=2"></script>
+<script>
+// ─────────────────────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const agent = new DeFiAgent('');
+let isProcessing = false;
+let currentPlan = null;
+const chatEl = $('chat');
+const chatScroll = $('chat-scroll');
+
+// ─────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────
+function scrollDown() {
+  requestAnimationFrame(() => {
+    chatScroll.scrollTop = chatScroll.scrollHeight;
+  });
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function renderMd(text) {
+  let h = esc(text);
+  h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  h = h.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  h = h.replace(/`([^`]+)`/g, '<code>$1</code>');
+  h = h.replace(/^[ ]*[-•] (.+)$/gm, '<li>$1</li>');
+  h = h.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
+  h = h.replace(/\n\n+/g, '<br><br>');
+  h = h.replace(/\n/g, '<br>');
+  return h;
+}
+
+function addMsg(html, type) {
+  const row = document.createElement('div');
+  row.className = `msg msg-${type} anim-enter`;
+  const bubble = document.createElement('div');
+  bubble.className = `bubble bubble-${type}`;
+  bubble.innerHTML = html;
+  row.appendChild(bubble);
+  chatEl.appendChild(row);
+  scrollDown();
+  return bubble;
+}
+
+function addStatus(text) {
+  const row = document.createElement('div');
+  row.className = 'status-line anim-enter';
+  row.innerHTML = `<span class="status-dot anim-pulse"></span><span style="color:var(--text-2)">${esc(text)}</span>`;
+  chatEl.appendChild(row);
+  scrollDown();
+  return row;
+}
+
+function removeEl(el) { if (el?.parentNode) el.parentNode.removeChild(el); }
+
+function fillPrompt(btn) {
+  const input = $('msg-input');
+  if (input.disabled) {
+    addMsg(`<span style="color:var(--warn);font-size:13px">Connect your wallet first to start chatting.</span>`, 'agent');
+    return;
+  }
+  input.value = btn.textContent;
+  input.focus();
+}
+
+// ─────────────────────────────────────────────────────────────
+// Renderers
+// ─────────────────────────────────────────────────────────────
+function renderGoals(goals) {
+  let h = '';
+
+  goals.forEach((goal, i) => {
+    const depLabel = goal.depends_on
+      ? `<span class="dep-badge">after ${esc(goal.depends_on)}</span>`
+      : '';
+
+    h += `<div class="step-card" id="goal-card-${i}">
+      <div class="step-header">
+        <span class="step-num">${esc(goal.id || `g${i+1}`)}</span>
+        <span class="step-action">${esc(goal.action)}</span>
+        ${depLabel}
+      </div>
+      <div class="step-body">
+        <div class="step-desc">${esc(goal.description)}</div>
+        <div class="step-args">
+          ${Object.entries(goal.arguments || {}).map(([k, v]) =>
+            `<span class="arg-chip"><span class="arg-key">${esc(k)}</span> <span class="arg-val">${esc(String(v))}</span></span>`
+          ).join('')}
+        </div>
+        <div class="goal-status" id="goal-status-${i}"></div>
+      </div>
+    </div>`;
+  });
+
+  h += `<button onclick="handleExecute()" id="btn-execute" class="btn btn-ok" style="width:100%;margin-top:12px;">
+    Execute ${goals.length} Goal${goals.length > 1 ? 's' : ''}
+  </button>`;
+
+  return h;
+}
+
+// ─────────────────────────────────────────────────────────────
+// Activity Log
+// ─────────────────────────────────────────────────────────────
+let logCount = 0;
+
+function addLog(type, msg) {
+  logCount++;
+  $('log-count').textContent = logCount;
+  const colors = {
+    parsing: 'var(--accent)', validating: 'var(--purple)', building: 'var(--warn)',
+    signing: 'var(--warn)', confirmed: 'var(--ok)', error: 'var(--err)',
+    intent_parsed: 'var(--accent)', built: 'var(--ok)', tx_sent: 'var(--accent)',
+    reply: 'var(--text-2)', tx_failed: 'var(--err)', execution_complete: 'var(--ok)',
+  };
+  const el = document.createElement('div');
+  el.className = 'log-entry';
+  el.style.color = colors[type] || 'var(--text-2)';
+  el.textContent = `${new Date().toLocaleTimeString()} ${type}: ${msg}`;
+  $('log-entries').appendChild(el);
+}
+
+function toggleLog() {
+  const panel = $('log-panel');
+  const arrow = $('log-arrow');
+  const btn = panel.previousElementSibling;
+  const open = !panel.classList.contains('open');
+  panel.classList.toggle('open');
+  arrow.style.transform = open ? 'rotate(90deg)' : '';
+  btn.setAttribute('aria-expanded', open);
+}
+
+// ─────────────────────────────────────────────────────────────
+// Agent Events → Log
+// ─────────────────────────────────────────────────────────────
+agent.onEvent(e => {
+  const m = {
+    connected: `Wallet: ${e.data?.address?.slice(0, 8)}...`,
+    portfolio: `Portfolio: ${Object.keys(e.data?.balances || {}).length} tokens`,
+    portfolio_refreshed: `Balances refreshed (${Object.keys(e.data?.balances || {}).length} tokens)`,
+    parsing: `Parsing: "${e.data?.message?.slice(0, 40)}"`,
+    intent_parsed: `Intent: ${e.data?.goals?.length || 0} goal(s)`,
+    validating: `Validating: ${e.data?.action}`,
+    building: `Building: ${e.data?.action}`,
+    built: `Built ${e.data?.transactions?.length || 0} tx for ${e.data?.action}`,
+    signing: `Signing: ${e.data?.action} (${e.data?.goalId || ''})`,
+    tx_sent: `Sent: ${e.data?.txHash?.slice(0,14)}...`,
+    confirmed: `Confirmed: ${e.data?.txHash?.slice(0,14)}...`,
+    tx_failed: `Failed: ${e.data?.txHash?.slice(0,14)}...`,
+    goal_complete: `Goal ${e.data?.goalId} complete`,
+    goal_failed: `Goal ${e.data?.goalId} failed: ${e.data?.error}`,
+    reply: 'Agent replied',
+    execution_complete: `Done: ${e.data?.results?.length} goal(s) processed`,
+  };
+  if (m[e.type]) addLog(e.type, m[e.type]);
+});
+
+// ─────────────────────────────────────────────────────────────
+// Connect Wallet
+// ─────────────────────────────────────────────────────────────
+async function handleConnect() {
+  const btn = $('btn-connect');
+  try {
+    btn.textContent = 'Connecting...';
+    btn.disabled = true;
+
+    const { address, chainId } = await agent.connectWallet();
+
+    btn.textContent = `${address.slice(0, 6)}...${address.slice(-4)}`;
+    btn.className = 'btn btn-ghost btn-sm';
+    btn.style.fontFamily = 'var(--mono)';
+    btn.style.fontSize = '12px';
+    btn.onclick = null;
+
+    if (chainId !== 1) {
+      addMsg(`<span style="color:var(--warn)">Not on Ethereum Mainnet. Please switch your wallet network.</span>`, 'agent');
+    }
+
+    const statusEl = addStatus('Reading balances...');
+    const balances = await agent.readPortfolio();
+    removeEl(statusEl);
+
+    // Show portfolio
+    const strip = $('portfolio');
+    strip.classList.add('show');
+    const cards = $('balance-cards');
+    cards.innerHTML = '';
+    for (const [token, amount] of Object.entries(balances)) {
+      cards.innerHTML += `<div class="bal-chip"><span class="bal-val">${esc(amount)}</span><span class="bal-sym">${esc(token)}</span></div>`;
+    }
+
+    // Enable input
+    const input = $('msg-input');
+    input.disabled = false;
+    input.placeholder = 'What do you want to do?';
+    $('btn-send').disabled = false;
+    input.focus();
+
+  } catch (err) {
+    btn.textContent = 'Connect Wallet';
+    btn.disabled = false;
+    addMsg(`<span style="color:var(--err);font-size:13px">${esc(err.message)}</span>`, 'agent');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// Send Message
+// ─────────────────────────────────────────────────────────────
+async function handleSend(e) {
+  e.preventDefault();
+  const input = $('msg-input');
+  const msg = input.value.trim();
+  if (!msg || isProcessing || input.disabled) return;
+
+  input.value = '';
+  isProcessing = true;
+  $('btn-send').disabled = true;
+
+  addMsg(esc(msg), 'user');
+  const statusEl = addStatus('Thinking...');
+
+  try {
+    const plan = await agent.plan(msg);
+    removeEl(statusEl);
+
+    const goals = plan.goals || [];
+    if (!goals.length) {
+      addMsg(renderMd(plan.reply || "I'm not sure how to help with that. Try describing a DeFi action."), 'agent');
+    } else {
+      let html = '';
+      if (plan.reply) html += `<div style="margin-bottom:12px">${renderMd(plan.reply)}</div>`;
+      html += renderGoals(goals);
+      currentPlan = { ...plan, goals };
+      addMsg(html, 'agent');
+    }
+  } catch (err) {
+    removeEl(statusEl);
+    addMsg(`<span style="color:var(--err);font-size:13px">${esc(err.message)}</span>`, 'agent');
+  }
+
+  isProcessing = false;
+  $('btn-send').disabled = false;
+  input.focus();
+}
+
+// ─────────────────────────────────────────────────────────────
+// Execute Plan
+// ─────────────────────────────────────────────────────────────
+async function handleExecute() {
+  if (!currentPlan || !currentPlan.goals.length || isProcessing) return;
+  isProcessing = true;
+
+  const btn = $('btn-execute');
+  if (btn) { btn.disabled = true; btn.textContent = 'Executing...'; btn.className = 'btn btn-ghost'; btn.style.width = '100%'; btn.style.marginTop = '12px'; }
+
+  const goals = currentPlan.goals;
+  const statusMessages = {
+    building: 'Building transactions...',
+    observing: 'Reading updated balances...',
+    signing: 'Waiting for signature...',
+    confirmed: 'Confirmed',
+    failed: 'Failed',
+  };
+
+  const results = await agent.executeGoals(goals, (goalIdx, status, data) => {
+    const card = $(`goal-card-${goalIdx}`);
+    const statusEl = $(`goal-status-${goalIdx}`);
+    if (!card || !statusEl) return;
+
+    // Update card visual state
+    card.className = `step-card goal-${status}`;
+
+    if (status === 'signing') {
+      const label = data.type === 'approval' ? 'Approve' : 'Sign';
+      statusEl.innerHTML = `<span class="status-dot anim-pulse"></span> ${label} tx ${data.txIndex + 1}/${data.txTotal}`;
+    } else if (status === 'observing') {
+      statusEl.innerHTML = `<span class="status-dot anim-pulse"></span> Refreshing balances...`;
+    } else if (status === 'building') {
+      statusEl.innerHTML = `<span class="status-dot anim-pulse"></span> Building...`;
+    } else if (status === 'confirmed') {
+      const hashes = (data.txResults || [])
+        .filter(r => r.txHash)
+        .map(r => `<a href="https://etherscan.io/tx/${r.txHash}" target="_blank" rel="noopener" class="tx-link">${r.txHash.slice(0,10)}...${r.txHash.slice(-6)}</a>`)
+        .join(' ');
+      statusEl.innerHTML = `<span style="color:var(--ok)">Confirmed</span> ${hashes}`;
+    } else if (status === 'failed') {
+      const msg = data.rejected ? 'Cancelled by user' : (data.error || 'Failed');
+      statusEl.innerHTML = `<span style="color:var(--err)">${esc(msg)}</span>`;
+    }
+
+    scrollDown();
+  });
+
+  // Summary
+  const ok = results.filter(r => r.success).length;
+  const total = goals.length;
+  const last = results[results.length - 1];
+
+  if (ok === total) {
+    addMsg(`<span style="color:var(--ok);font-weight:600">All ${ok} goal${ok > 1 ? 's' : ''} completed.</span>`, 'agent');
+  } else if (last && !last.success) {
+    const lastTx = last.txResults?.[last.txResults.length - 1];
+    if (lastTx?.rejected) {
+      addMsg(`<span style="color:var(--text-2)">Execution cancelled.</span>`, 'agent');
+    } else if (ok > 0) {
+      addMsg(`<span style="color:var(--warn)">${ok}/${total} goals completed. Stopped at ${esc(last.goalId)}.</span>`, 'agent');
+    } else {
+      addMsg(`<span style="color:var(--err)">Failed: ${esc(last.txResults?.[last.txResults.length - 1]?.error || 'unknown')}</span>`, 'agent');
+    }
+  }
+
+  // Update portfolio after execution
+  try { await agent.readPortfolio(); updatePortfolioUI(); } catch (e) {}
+
+  if (btn) { btn.textContent = 'Done'; btn.className = 'btn btn-ghost'; btn.style.width = '100%'; btn.style.marginTop = '12px'; btn.style.opacity = '.4'; }
+  currentPlan = null;
+  isProcessing = false;
+  $('btn-send').disabled = false;
+}
+
+function updatePortfolioUI() {
+  const cards = $('balance-cards');
+  if (!cards) return;
+  cards.innerHTML = '';
+  for (const [token, amount] of Object.entries(agent.balances)) {
+    cards.innerHTML += `<div class="bal-chip"><span class="bal-val">${esc(amount)}</span><span class="bal-sym">${esc(token)}</span></div>`;
+  }
+}
+</script>
+</body>
+</html>
