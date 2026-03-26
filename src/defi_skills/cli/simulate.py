@@ -177,7 +177,7 @@ def ensure_anvil():
         raise SystemExit("Foundry installed but anvil not in PATH. Add ~/.foundry/bin to PATH.")
 
 
-def resolve_rpc():
+def resolve_rpc(chain_id: int = 1):
     """Return (rpc_url, needs_anvil). Checks local node first, then Alchemy."""
     local_url = "http://127.0.0.1:8545"
     try:
@@ -186,9 +186,13 @@ def resolve_rpc():
     except Exception:
         pass
 
-    alchemy_key = cfg.get_value("alchemy_api_key")
-    if alchemy_key:
-        return f"https://eth-mainnet.g.alchemy.com/v2/{alchemy_key}", True
+    from defi_skills.engine.chains import get_rpc_url
+    import os
+    if os.getenv("ALCHEMY_API_KEY"):
+        try:
+            return get_rpc_url(chain_id), True
+        except ValueError:
+            pass
 
     return None, False
 
@@ -201,9 +205,9 @@ def anvil_rpc(w3, method, params):
     return resp
 
 
-def run_simulation(build_result, from_address):
+def run_simulation(build_result, from_address, chain_id: int = 1):
     """Execute built transactions on a fork. Returns simulation result dict."""
-    rpc_url, needs_anvil = resolve_rpc()
+    rpc_url, needs_anvil = resolve_rpc(chain_id)
     if rpc_url is None:
         return {
             "success": False,
