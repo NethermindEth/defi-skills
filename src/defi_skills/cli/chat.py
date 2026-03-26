@@ -148,9 +148,11 @@ TOOLS = [
 
 # System prompt
 
-def build_system_prompt(engine):
+def build_system_prompt(engine, chain_id=1):
     """Build the system prompt with dynamic action knowledge from playbooks."""
-    by_protocol = engine.get_actions_by_protocol()
+    from defi_skills.engine.chains import get_chain_config
+    chain = get_chain_config(chain_id)
+    by_protocol = engine.get_actions_by_protocol(chain_id)
 
     actions_lines = []
     for protocol, actions in sorted(by_protocol.items()):
@@ -158,7 +160,11 @@ def build_system_prompt(engine):
         actions_lines.append(f"**{protocol}**: {names}")
     actions_section = "\n".join(actions_lines)
 
-    return f"""You are a DeFi transaction assistant for Ethereum mainnet. You help users build unsigned Ethereum transactions.
+    ens_note = ""
+    if not chain.ens_supported:
+        ens_note = f"\n- ENS names (*.eth) are NOT available on {chain.name}. Always use hex addresses (0x...)."
+
+    return f"""You are a DeFi transaction assistant for {chain.name}. You help users build unsigned Ethereum transactions.
 
 ## Your Role
 You understand the user's intent, plan multi-step operations, and use your tools to build transactions. You never sign or broadcast. You only produce unsigned payloads (to, value, data).
@@ -178,7 +184,7 @@ For every user request, follow this sequence:
 Always call action_info before build_transaction. The call is instant (local lookup) and prevents errors from wrong field names.
 
 ## Constraints
-- Ethereum mainnet only (chain_id 1). All contract addresses are mainnet.
+- {chain.name} only (chain_id {chain.chain_id}). All contract addresses are for {chain.name}.{ens_note}
 - One action per build_transaction call. For multi-step, make multiple calls.
 - Always check "success" in build responses. If false, read the error and fix.
 - Negative amounts are rejected.
@@ -272,7 +278,7 @@ def execute_tool(name, arguments, engine, chat_state):
     if name == "build_transaction":
         action = arguments.get("action", "")
         args = arguments.get("args", {})
-        return build_tx(engine, action, args, chat_state["wallet_addr"], 1)
+        return build_tx(engine, action, args, chat_state["wallet_addr"], chat_state["chain_id"])
 
     if name == "simulate":
         from defi_skills.cli.simulate import run_simulation
@@ -285,7 +291,7 @@ def execute_tool(name, arguments, engine, chat_state):
         for i, step in enumerate(steps):
             step_action = step.get("action", "")
             step_args = step.get("args", {})
-            result = build_tx(engine, step_action, step_args, chat_state["wallet_addr"], 1)
+            result = build_tx(engine, step_action, step_args, chat_state["wallet_addr"], chat_state["chain_id"])
             if not result.get("success"):
                 return {
                     "success": False,
@@ -390,12 +396,14 @@ def tool_result_line(name, result):
 
 def run_chat(engine, wallet_addr, _chain_id=1, model="claude-sonnet-4-6", stream=False):
     """Run the interactive chat agent loop."""
-    system_prompt = build_system_prompt(engine)
+    system_prompt = build_system_prompt(engine, chain_id=_chain_id)
     messages = [{"role": "system", "content": system_prompt}]
 
-    chat_state = {"wallet_addr": wallet_addr, "model": model}
+    chat_state = {"wallet_addr": wallet_addr, "model": model, "chain_id": _chain_id}
 
-    by_protocol = engine.get_actions_by_protocol()
+    from defi_skills.engine.chains import get_chain_config
+    chain_info = get_chain_config(_chain_id)
+    by_protocol = engine.get_actions_by_protocol(_chain_id)
     action_count = sum(len(v) for v in by_protocol.values())
     protocol_count = len(by_protocol)
 
@@ -404,7 +412,7 @@ def run_chat(engine, wallet_addr, _chain_id=1, model="claude-sonnet-4-6", stream
     info_table.add_column(style="dim", width=8)
     info_table.add_column()
     info_table.add_row("Model", model)
-    info_table.add_row("Chain", "Ethereum Mainnet")
+    info_table.add_row("Chain", chain_info.name)
     info_table.add_row("Wallet", wallet_addr)
     info_table.add_row("Actions", f"{action_count} across {protocol_count} protocols")
 

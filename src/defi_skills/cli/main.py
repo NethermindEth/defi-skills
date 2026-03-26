@@ -424,7 +424,9 @@ def actions(action_name, json_output):
 @click.option("--args", "-A", "args_json", default=None, help="JSON arguments (e.g. '{\"asset\":\"USDC\",\"amount\":\"500\"}').")
 @click.option("--json", "-j", "json_output", is_flag=True, help="Output raw JSON.")
 @click.option("--wallet", "-w", default=None, help="Override wallet address.")
-def build(action_name, args_json, json_output, wallet):
+@click.option("--chain", "-c", "chain_id", type=int, default=1,
+              help="Chain ID (1=mainnet, 11155111=sepolia)")
+def build(action_name, args_json, json_output, wallet, chain_id):
     """Build an unsigned Ethereum transaction (deterministic, no LLM).
 
     \b
@@ -451,7 +453,7 @@ def build(action_name, args_json, json_output, wallet):
         click.echo(f"  {DIM}Loading engine...{RESET}", err=True)
 
     engine, _, _ = init_engine()
-    result = build_tx(engine, action_name, arguments, wallet_addr, 1)
+    result = build_tx(engine, action_name, arguments, wallet_addr, chain_id)
 
     if json_output:
         click.echo(json.dumps(result, indent=2, default=str))
@@ -468,7 +470,9 @@ def build(action_name, args_json, json_output, wallet):
 @click.option("--model", "-m", default=None, help="LLM model (e.g. claude-sonnet-4-6, gpt-5.4).")
 @click.option("--wallet", "-w", default=None, help="Override wallet address.")
 @click.option("--stream/--no-stream", default=None, help="Stream text live (raw) or wait for formatted output.")
-def chat(model, wallet, stream):
+@click.option("--chain", "-c", "chain_id", type=int, default=1,
+              help="Chain ID (1=mainnet, 11155111=sepolia)")
+def chat(model, wallet, stream, chain_id):
     """Interactive DeFi transaction assistant (uses LLM with tool calling).
 
     \b
@@ -493,7 +497,7 @@ def chat(model, wallet, stream):
     engine, _, _ = init_engine()
 
     from defi_skills.cli.chat import run_chat
-    run_chat(engine, wallet_addr, 1, model_name, stream=stream)
+    run_chat(engine, wallet_addr, chain_id, model_name, stream=stream)
 
 @main.command()
 @click.option("--action", "-a", "action_name", default=None, help="Action name (e.g. aave_supply).")
@@ -502,7 +506,9 @@ def chat(model, wallet, stream):
               help='JSON array of steps: \'[{"action":"...","args":{...}}, ...]\'')
 @click.option("--json", "-j", "json_output", is_flag=True, help="Output raw JSON.")
 @click.option("--wallet", "-w", default=None, help="Override wallet address.")
-def simulate(action_name, args_json, multi_step_json, json_output, wallet):
+@click.option("--chain", "-c", "chain_id", type=int, default=1,
+              help="Chain ID (1=mainnet, 11155111=sepolia)")
+def simulate(action_name, args_json, multi_step_json, json_output, wallet, chain_id):
     """Build and simulate transactions on a local Anvil fork.
 
     \b
@@ -547,7 +553,7 @@ def simulate(action_name, args_json, multi_step_json, json_output, wallet):
         if not json_output:
             click.echo(f"  {DIM}Building transaction...{RESET}", err=True)
 
-        build_result = build_tx(engine, action_name, arguments, wallet_addr, 1)
+        build_result = build_tx(engine, action_name, arguments, wallet_addr, chain_id)
 
         if not build_result.get("success"):
             if json_output:
@@ -579,7 +585,7 @@ def simulate(action_name, args_json, multi_step_json, json_output, wallet):
             if not json_output:
                 click.echo(f"  {DIM}Building step {i + 1}/{len(steps)}: {step_action}...{RESET}", err=True)
 
-            step_result = build_tx(engine, step_action, step_args, wallet_addr, 1)
+            step_result = build_tx(engine, step_action, step_args, wallet_addr, chain_id)
             if not step_result.get("success"):
                 err = step_result.get("error", "unknown error")
                 if json_output:

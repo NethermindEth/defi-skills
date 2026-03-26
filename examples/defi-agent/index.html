@@ -381,6 +381,7 @@ a:hover { text-decoration: underline; }
   .portfolio-inner { padding: 8px 12px; }
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
 </head>
 <body>
 
@@ -390,11 +391,17 @@ a:hover { text-decoration: underline; }
     <div class="logo">
       <div class="logo-mark">aw</div>
       <span class="logo-text">DefiSkills</span>
-      <span class="logo-badge">mainnet</span>
+      <span class="logo-badge" id="chain-badge">mainnet</span>
     </div>
-    <button id="btn-connect" class="btn btn-accent btn-sm" onclick="handleConnect()" aria-label="Connect wallet">
-      Connect Wallet
-    </button>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <select id="chain-select" class="btn btn-ghost btn-sm" style="font-family:var(--mono);font-size:12px;background:var(--bg-2);color:var(--text-1);border:1px solid var(--border-0);border-radius:var(--radius-sm);padding:4px 8px;cursor:pointer;" onchange="handleChainSwitch(this.value)">
+        <option value="1">Mainnet</option>
+        <option value="11155111">Sepolia</option>
+      </select>
+      <button id="btn-connect" class="btn btn-accent btn-sm" onclick="handleConnect()" aria-label="Connect wallet">
+        Connect Wallet
+      </button>
+    </div>
   </div>
 </header>
 
@@ -416,7 +423,7 @@ a:hover { text-decoration: underline; }
         <h2>What would you like to do?</h2>
         <p>Describe any DeFi action in plain English. I'll build the transaction, you sign it.</p>
         <div class="prompt-chips" id="prompt-chips">
-          <button class="prompt-chip" onclick="fillPrompt(this)">Stake 10 ETH on Lido</button>
+          <button class="prompt-chip" onclick="fillPrompt(this)">What protocols do you support?</button>
           <button class="prompt-chip" onclick="fillPrompt(this)">Swap 500 USDC for WETH</button>
           <button class="prompt-chip" onclick="fillPrompt(this)">Supply 1000 DAI to Aave</button>
         </div>
@@ -452,51 +459,45 @@ a:hover { text-decoration: underline; }
 </div>
 
 <!-- ═══ SCRIPTS ═══ -->
-<script src="agent.js?v=2"></script>
+<script src="agent.js?v=3"></script>
 <script>
-// ─────────────────────────────────────────────────────────────
-// State
-// ─────────────────────────────────────────────────────────────
+// ── State ──
 const $ = id => document.getElementById(id);
 const agent = new DeFiAgent('');
 let isProcessing = false;
-let currentPlan = null;
 const chatEl = $('chat');
 const chatScroll = $('chat-scroll');
+const CHAIN_NAMES = { 1: 'mainnet', 11155111: 'sepolia' };
+const SUPPORTED_CHAINS = { 1: 'Mainnet', 11155111: 'Sepolia' };
 
-// ─────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────
-function scrollDown() {
-  requestAnimationFrame(() => {
-    chatScroll.scrollTop = chatScroll.scrollHeight;
-  });
-}
+// ── Helpers ──
+function scrollDown() { requestAnimationFrame(() => { chatScroll.scrollTop = chatScroll.scrollHeight; }); }
 
-function esc(s) {
-  const d = document.createElement('div');
-  d.textContent = s;
-  return d.innerHTML;
-}
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
 function renderMd(text) {
   let h = esc(text);
   h = h.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   h = h.replace(/\*(.+?)\*/g, '<em>$1</em>');
   h = h.replace(/`([^`]+)`/g, '<code>$1</code>');
-  h = h.replace(/^[ ]*[-•] (.+)$/gm, '<li>$1</li>');
+  h = h.replace(/^[ ]*[-] (.+)$/gm, '<li>$1</li>');
   h = h.replace(/((?:<li>.*<\/li>\n?)+)/g, '<ul>$1</ul>');
   h = h.replace(/\n\n+/g, '<br><br>');
   h = h.replace(/\n/g, '<br>');
-  return h;
+  return DOMPurify.sanitize(h);
 }
 
-function addMsg(html, type) {
+
+function addMsg(content, type) {
   const row = document.createElement('div');
-  row.className = `msg msg-${type} anim-enter`;
+  row.className = 'msg msg-' + type + ' anim-enter';
   const bubble = document.createElement('div');
-  bubble.className = `bubble bubble-${type}`;
-  bubble.innerHTML = html;
+  bubble.className = 'bubble bubble-' + type;
+  if (type === 'user') {
+    bubble.textContent = content;
+  } else {
+    bubble.innerHTML = DOMPurify.sanitize(content);
+  }
   row.appendChild(bubble);
   chatEl.appendChild(row);
   scrollDown();
@@ -506,287 +507,281 @@ function addMsg(html, type) {
 function addStatus(text) {
   const row = document.createElement('div');
   row.className = 'status-line anim-enter';
-  row.innerHTML = `<span class="status-dot anim-pulse"></span><span style="color:var(--text-2)">${esc(text)}</span>`;
+  const dot = document.createElement('span');
+  dot.className = 'status-dot anim-pulse';
+  const label = document.createElement('span');
+  label.style.color = 'var(--text-2)';
+  label.textContent = text;
+  row.appendChild(dot);
+  row.appendChild(label);
   chatEl.appendChild(row);
   scrollDown();
   return row;
 }
 
-function removeEl(el) { if (el?.parentNode) el.parentNode.removeChild(el); }
+function removeEl(el) { if (el && el.parentNode) el.parentNode.removeChild(el); }
 
-function fillPrompt(btn) {
-  const input = $('msg-input');
-  if (input.disabled) {
-    addMsg(`<span style="color:var(--warn);font-size:13px">Connect your wallet first to start chatting.</span>`, 'agent');
-    return;
+function addToolLog(log) {
+  const entries = $('log-entries');
+  const count = $('log-count');
+  for (const entry of log) {
+    const div = document.createElement('div');
+    div.className = 'log-entry';
+    const icon = entry.status === 'ok' ? '\u2713' : '\u2717';
+    const color = entry.status === 'ok' ? 'var(--ok)' : 'var(--err)';
+    const span1 = document.createElement('span');
+    span1.style.color = color;
+    span1.textContent = icon + ' ';
+    const strong = document.createElement('strong');
+    strong.textContent = entry.tool;
+    const span2 = document.createTextNode(' ' + (entry.summary || ''));
+    div.appendChild(span1);
+    div.appendChild(strong);
+    div.appendChild(span2);
+    entries.appendChild(div);
   }
-  input.value = btn.textContent;
-  input.focus();
+  count.textContent = entries.children.length;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Renderers
-// ─────────────────────────────────────────────────────────────
-function renderGoals(goals) {
-  let h = '';
+function updatePortfolioUI() {
+  const cards = $('balance-cards');
+  if (!cards) return;
+  cards.textContent = '';
+  for (const [token, amount] of Object.entries(agent.balances)) {
+    const chip = document.createElement('div');
+    chip.className = 'bal-chip';
+    const valSpan = document.createElement('span');
+    valSpan.className = 'bal-val';
+    valSpan.textContent = amount;
+    const symSpan = document.createElement('span');
+    symSpan.className = 'bal-sym';
+    symSpan.textContent = token;
+    chip.appendChild(valSpan);
+    chip.appendChild(symSpan);
+    cards.appendChild(chip);
+  }
+}
 
-  goals.forEach((goal, i) => {
-    const depLabel = goal.depends_on
-      ? `<span class="dep-badge">after ${esc(goal.depends_on)}</span>`
-      : '';
+// ── Transaction Cards ──
 
-    h += `<div class="step-card" id="goal-card-${i}">
-      <div class="step-header">
-        <span class="step-num">${esc(goal.id || `g${i+1}`)}</span>
-        <span class="step-action">${esc(goal.action)}</span>
-        ${depLabel}
-      </div>
-      <div class="step-body">
-        <div class="step-desc">${esc(goal.description)}</div>
-        <div class="step-args">
-          ${Object.entries(goal.arguments || {}).map(([k, v]) =>
-            `<span class="arg-chip"><span class="arg-key">${esc(k)}</span> <span class="arg-val">${esc(String(v))}</span></span>`
-          ).join('')}
-        </div>
-        <div class="goal-status" id="goal-status-${i}"></div>
-      </div>
-    </div>`;
+function renderTxCards(transactions) {
+  const container = document.createElement('div');
+  container.style.margin = '8px 0';
+  transactions.forEach(function(tx, i) {
+    const card = document.createElement('div');
+    card.className = 'tx-card';
+    card.dataset.status = 'pending';
+    const icon = document.createElement('span');
+    icon.className = 'tx-icon';
+    icon.textContent = tx.type === 'approval' ? '\uD83D\uDD13' : '\u26A1';
+    const label = document.createElement('span');
+    label.className = 'tx-label';
+    label.textContent = tx.label || tx.action || tx.type;
+    const status = document.createElement('span');
+    status.className = 'tx-status';
+    status.textContent = 'pending';
+    card.appendChild(icon);
+    card.appendChild(label);
+    card.appendChild(status);
+    container.appendChild(card);
+  });
+  return container;
+}
+
+function updateTxCard(container, index, status, detail) {
+  const card = container.children[index];
+  if (!card) return;
+  card.dataset.status = status;
+  const statusEl = card.querySelector('.tx-status');
+  if (status === 'signing') { statusEl.textContent = 'signing...'; }
+  else if (status === 'confirmed') {
+    statusEl.textContent = '';
+    const link = document.createElement('a');
+    link.className = 'tx-link';
+    link.href = getExplorerUrl(detail);
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = detail.slice(0, 10) + '...';
+    statusEl.appendChild(link);
+  }
+  else if (status === 'rejected') { statusEl.textContent = 'rejected'; }
+  else if (status === 'failed') { statusEl.textContent = 'failed'; }
+}
+
+function getExplorerUrl(txHash) {
+  if (agent.chainId === 11155111) return 'https://sepolia.etherscan.io/tx/' + txHash;
+  return 'https://etherscan.io/tx/' + txHash;
+}
+
+// ── Sign Flow ──
+
+async function handleSign(transactions, txContainer) {
+  const results = await agent.signAll(transactions, function(i, status, detail) {
+    updateTxCard(txContainer, i, status, detail);
   });
 
-  h += `<button onclick="handleExecute()" id="btn-execute" class="btn btn-ok" style="width:100%;margin-top:12px;">
-    Execute ${goals.length} Goal${goals.length > 1 ? 's' : ''}
-  </button>`;
+  const allOk = results.every(function(r) { return r.success; });
+  const rejected = results.some(function(r) { return r.rejected; });
 
-  return h;
+  await agent.readBalances();
+  updatePortfolioUI();
+
+  if (allOk) {
+    const hashes = results.map(function(r) { return r.txHash; }).join(', ');
+    await handleAgentMessage('Transactions confirmed: ' + hashes);
+  } else if (rejected) {
+    await handleAgentMessage('Transaction was rejected by user.');
+  } else {
+    var failed = results.find(function(r) { return !r.success; });
+    await handleAgentMessage('Transaction failed: ' + (failed ? failed.error : 'unknown error'));
+  }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Activity Log
-// ─────────────────────────────────────────────────────────────
-let logCount = 0;
+// ── Core Message Flow ──
 
-function addLog(type, msg) {
-  logCount++;
-  $('log-count').textContent = logCount;
-  const colors = {
-    parsing: 'var(--accent)', validating: 'var(--purple)', building: 'var(--warn)',
-    signing: 'var(--warn)', confirmed: 'var(--ok)', error: 'var(--err)',
-    intent_parsed: 'var(--accent)', built: 'var(--ok)', tx_sent: 'var(--accent)',
-    reply: 'var(--text-2)', tx_failed: 'var(--err)', execution_complete: 'var(--ok)',
-  };
-  const el = document.createElement('div');
-  el.className = 'log-entry';
-  el.style.color = colors[type] || 'var(--text-2)';
-  el.textContent = `${new Date().toLocaleTimeString()} ${type}: ${msg}`;
-  $('log-entries').appendChild(el);
+async function handleAgentMessage(message) {
+  const statusEl = addStatus('Thinking...');
+  try {
+    const resp = await agent.sendMessage(message);
+    removeEl(statusEl);
+
+    if (resp.tool_log && resp.tool_log.length) addToolLog(resp.tool_log);
+    if (resp.reply) addMsg(renderMd(resp.reply), 'agent');
+
+    if (resp.transactions && resp.transactions.length) {
+      const txContainer = renderTxCards(resp.transactions);
+      const bubble = addMsg('', 'agent');
+      bubble.appendChild(txContainer);
+
+      const signBtn = document.createElement('button');
+      signBtn.className = 'btn btn-ok btn-sm';
+      signBtn.style.marginTop = '8px';
+      signBtn.textContent = 'Sign ' + resp.transactions.length + ' transaction' + (resp.transactions.length > 1 ? 's' : '');
+      signBtn.onclick = async function() {
+        signBtn.disabled = true;
+        signBtn.textContent = 'Signing...';
+        await handleSign(resp.transactions, txContainer);
+        signBtn.remove();
+      };
+      bubble.appendChild(signBtn);
+    }
+  } catch (err) {
+    removeEl(statusEl);
+    addMsg('<span style="color:var(--err)">' + esc(err.message) + '</span>', 'agent');
+  }
 }
 
-function toggleLog() {
-  const panel = $('log-panel');
-  const arrow = $('log-arrow');
-  const btn = panel.previousElementSibling;
-  const open = !panel.classList.contains('open');
-  panel.classList.toggle('open');
-  arrow.style.transform = open ? 'rotate(90deg)' : '';
-  btn.setAttribute('aria-expanded', open);
-}
+// ── Connect Wallet ──
 
-// ─────────────────────────────────────────────────────────────
-// Agent Events → Log
-// ─────────────────────────────────────────────────────────────
-agent.onEvent(e => {
-  const m = {
-    connected: `Wallet: ${e.data?.address?.slice(0, 8)}...`,
-    portfolio: `Portfolio: ${Object.keys(e.data?.balances || {}).length} tokens`,
-    portfolio_refreshed: `Balances refreshed (${Object.keys(e.data?.balances || {}).length} tokens)`,
-    parsing: `Parsing: "${e.data?.message?.slice(0, 40)}"`,
-    intent_parsed: `Intent: ${e.data?.goals?.length || 0} goal(s)`,
-    validating: `Validating: ${e.data?.action}`,
-    building: `Building: ${e.data?.action}`,
-    built: `Built ${e.data?.transactions?.length || 0} tx for ${e.data?.action}`,
-    signing: `Signing: ${e.data?.action} (${e.data?.goalId || ''})`,
-    tx_sent: `Sent: ${e.data?.txHash?.slice(0,14)}...`,
-    confirmed: `Confirmed: ${e.data?.txHash?.slice(0,14)}...`,
-    tx_failed: `Failed: ${e.data?.txHash?.slice(0,14)}...`,
-    goal_complete: `Goal ${e.data?.goalId} complete`,
-    goal_failed: `Goal ${e.data?.goalId} failed: ${e.data?.error}`,
-    reply: 'Agent replied',
-    execution_complete: `Done: ${e.data?.results?.length} goal(s) processed`,
-  };
-  if (m[e.type]) addLog(e.type, m[e.type]);
-});
-
-// ─────────────────────────────────────────────────────────────
-// Connect Wallet
-// ─────────────────────────────────────────────────────────────
 async function handleConnect() {
   const btn = $('btn-connect');
   try {
     btn.textContent = 'Connecting...';
     btn.disabled = true;
 
-    const { address, chainId } = await agent.connectWallet();
-
-    btn.textContent = `${address.slice(0, 6)}...${address.slice(-4)}`;
+    const info = await agent.connectWallet();
+    btn.textContent = info.address.slice(0, 6) + '...' + info.address.slice(-4);
     btn.className = 'btn btn-ghost btn-sm';
     btn.style.fontFamily = 'var(--mono)';
     btn.style.fontSize = '12px';
     btn.onclick = null;
 
-    if (chainId !== 1) {
-      addMsg(`<span style="color:var(--warn)">Not on Ethereum Mainnet. Please switch your wallet network.</span>`, 'agent');
+    if (!SUPPORTED_CHAINS[info.chainId]) {
+      addMsg('<span style="color:var(--warn)">Unsupported network. Switch to Mainnet or Sepolia.</span>', 'agent');
+    } else {
+      $('chain-select').value = String(info.chainId);
+      $('chain-badge').textContent = CHAIN_NAMES[info.chainId] || 'unknown';
     }
 
-    const statusEl = addStatus('Reading balances...');
-    const balances = await agent.readPortfolio();
-    removeEl(statusEl);
+    const balStatus = addStatus('Reading balances...');
+    await agent.readBalances();
+    removeEl(balStatus);
 
-    // Show portfolio
-    const strip = $('portfolio');
-    strip.classList.add('show');
-    const cards = $('balance-cards');
-    cards.innerHTML = '';
-    for (const [token, amount] of Object.entries(balances)) {
-      cards.innerHTML += `<div class="bal-chip"><span class="bal-val">${esc(amount)}</span><span class="bal-sym">${esc(token)}</span></div>`;
-    }
+    $('portfolio').classList.add('show');
+    updatePortfolioUI();
 
-    // Enable input
-    const input = $('msg-input');
-    input.disabled = false;
-    input.placeholder = 'What do you want to do?';
+    const sessStatus = addStatus('Starting agent...');
+    await agent.createSession();
+    removeEl(sessStatus);
+
+    $('msg-input').disabled = false;
+    $('msg-input').placeholder = 'What would you like to do?';
     $('btn-send').disabled = false;
-    input.focus();
-
+    $('msg-input').focus();
   } catch (err) {
     btn.textContent = 'Connect Wallet';
     btn.disabled = false;
-    addMsg(`<span style="color:var(--err);font-size:13px">${esc(err.message)}</span>`, 'agent');
+    addMsg('<span style="color:var(--err)">' + esc(err.message) + '</span>', 'agent');
   }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Send Message
-// ─────────────────────────────────────────────────────────────
+// ── Chain Switch ──
+
+async function handleChainSwitch(chainIdStr) {
+  var chainId = parseInt(chainIdStr);
+  $('chain-badge').textContent = CHAIN_NAMES[chainId] || 'unknown';
+
+  if (agent.wallet) {
+    try {
+      await agent.switchChain(chainId);
+      await agent.readBalances();
+      updatePortfolioUI();
+      agent.sessionId = null;
+      await agent.createSession();
+      addMsg('<span style="color:var(--ok)">Switched to ' + esc(SUPPORTED_CHAINS[chainId]) + '. New session started.</span>', 'agent');
+    } catch (err) {
+      addMsg('<span style="color:var(--warn)">Chain switch failed: ' + esc(err.message) + '</span>', 'agent');
+    }
+  }
+}
+
+// ── Send Message ──
+
 async function handleSend(e) {
   e.preventDefault();
-  const input = $('msg-input');
-  const msg = input.value.trim();
+  var input = $('msg-input');
+  var msg = input.value.trim();
   if (!msg || isProcessing || input.disabled) return;
 
   input.value = '';
   isProcessing = true;
   $('btn-send').disabled = true;
 
-  addMsg(esc(msg), 'user');
-  const statusEl = addStatus('Thinking...');
+  addMsg(msg, 'user');
 
-  try {
-    const plan = await agent.plan(msg);
-    removeEl(statusEl);
-
-    const goals = plan.goals || [];
-    if (!goals.length) {
-      addMsg(renderMd(plan.reply || "I'm not sure how to help with that. Try describing a DeFi action."), 'agent');
-    } else {
-      let html = '';
-      if (plan.reply) html += `<div style="margin-bottom:12px">${renderMd(plan.reply)}</div>`;
-      html += renderGoals(goals);
-      currentPlan = { ...plan, goals };
-      addMsg(html, 'agent');
+  if (!agent.sessionId) {
+    try { await agent.createSession(); }
+    catch (err) {
+      addMsg('<span style="color:var(--err)">Failed to start session.</span>', 'agent');
+      isProcessing = false;
+      $('btn-send').disabled = false;
+      return;
     }
-  } catch (err) {
-    removeEl(statusEl);
-    addMsg(`<span style="color:var(--err);font-size:13px">${esc(err.message)}</span>`, 'agent');
   }
 
+  await handleAgentMessage(msg);
   isProcessing = false;
   $('btn-send').disabled = false;
   input.focus();
 }
 
-// ─────────────────────────────────────────────────────────────
-// Execute Plan
-// ─────────────────────────────────────────────────────────────
-async function handleExecute() {
-  if (!currentPlan || !currentPlan.goals.length || isProcessing) return;
-  isProcessing = true;
-
-  const btn = $('btn-execute');
-  if (btn) { btn.disabled = true; btn.textContent = 'Executing...'; btn.className = 'btn btn-ghost'; btn.style.width = '100%'; btn.style.marginTop = '12px'; }
-
-  const goals = currentPlan.goals;
-  const statusMessages = {
-    building: 'Building transactions...',
-    observing: 'Reading updated balances...',
-    signing: 'Waiting for signature...',
-    confirmed: 'Confirmed',
-    failed: 'Failed',
-  };
-
-  const results = await agent.executeGoals(goals, (goalIdx, status, data) => {
-    const card = $(`goal-card-${goalIdx}`);
-    const statusEl = $(`goal-status-${goalIdx}`);
-    if (!card || !statusEl) return;
-
-    // Update card visual state
-    card.className = `step-card goal-${status}`;
-
-    if (status === 'signing') {
-      const label = data.type === 'approval' ? 'Approve' : 'Sign';
-      statusEl.innerHTML = `<span class="status-dot anim-pulse"></span> ${label} tx ${data.txIndex + 1}/${data.txTotal}`;
-    } else if (status === 'observing') {
-      statusEl.innerHTML = `<span class="status-dot anim-pulse"></span> Refreshing balances...`;
-    } else if (status === 'building') {
-      statusEl.innerHTML = `<span class="status-dot anim-pulse"></span> Building...`;
-    } else if (status === 'confirmed') {
-      const hashes = (data.txResults || [])
-        .filter(r => r.txHash)
-        .map(r => `<a href="https://etherscan.io/tx/${r.txHash}" target="_blank" rel="noopener" class="tx-link">${r.txHash.slice(0,10)}...${r.txHash.slice(-6)}</a>`)
-        .join(' ');
-      statusEl.innerHTML = `<span style="color:var(--ok)">Confirmed</span> ${hashes}`;
-    } else if (status === 'failed') {
-      const msg = data.rejected ? 'Cancelled by user' : (data.error || 'Failed');
-      statusEl.innerHTML = `<span style="color:var(--err)">${esc(msg)}</span>`;
-    }
-
-    scrollDown();
-  });
-
-  // Summary
-  const ok = results.filter(r => r.success).length;
-  const total = goals.length;
-  const last = results[results.length - 1];
-
-  if (ok === total) {
-    addMsg(`<span style="color:var(--ok);font-weight:600">All ${ok} goal${ok > 1 ? 's' : ''} completed.</span>`, 'agent');
-  } else if (last && !last.success) {
-    const lastTx = last.txResults?.[last.txResults.length - 1];
-    if (lastTx?.rejected) {
-      addMsg(`<span style="color:var(--text-2)">Execution cancelled.</span>`, 'agent');
-    } else if (ok > 0) {
-      addMsg(`<span style="color:var(--warn)">${ok}/${total} goals completed. Stopped at ${esc(last.goalId)}.</span>`, 'agent');
-    } else {
-      addMsg(`<span style="color:var(--err)">Failed: ${esc(last.txResults?.[last.txResults.length - 1]?.error || 'unknown')}</span>`, 'agent');
-    }
-  }
-
-  // Update portfolio after execution
-  try { await agent.readPortfolio(); updatePortfolioUI(); } catch (e) {}
-
-  if (btn) { btn.textContent = 'Done'; btn.className = 'btn btn-ghost'; btn.style.width = '100%'; btn.style.marginTop = '12px'; btn.style.opacity = '.4'; }
-  currentPlan = null;
-  isProcessing = false;
-  $('btn-send').disabled = false;
+function fillPrompt(btn) {
+  var input = $('msg-input');
+  input.value = btn.textContent;
+  input.focus();
 }
 
-function updatePortfolioUI() {
-  const cards = $('balance-cards');
-  if (!cards) return;
-  cards.innerHTML = '';
-  for (const [token, amount] of Object.entries(agent.balances)) {
-    cards.innerHTML += `<div class="bal-chip"><span class="bal-val">${esc(amount)}</span><span class="bal-sym">${esc(token)}</span></div>`;
-  }
+function toggleLog() {
+  var panel = $('log-panel');
+  var arrow = $('log-arrow');
+  panel.classList.toggle('open');
+  arrow.style.transform = panel.classList.contains('open') ? 'rotate(90deg)' : '';
 }
+
+// ── Init: allow chatting without wallet ──
+$('msg-input').disabled = false;
+$('msg-input').placeholder = 'Ask anything or connect wallet to build transactions...';
+$('btn-send').disabled = false;
 </script>
 </body>
 </html>

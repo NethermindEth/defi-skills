@@ -29,22 +29,22 @@ def etherscan_api_key() -> str:
     return key
 
 
-def etherscan_get(params: Dict) -> Dict:
+def etherscan_get(params: Dict, chain_id: int = 1) -> Dict:
     """Make an Etherscan V2 API call with rate limiting."""
     params["apikey"] = etherscan_api_key()
-    params["chainid"] = "1"
+    params["chainid"] = str(chain_id)
     resp = requests.get(ETHERSCAN_V2, params=params, timeout=15)
     time.sleep(0.25)  # Rate limit: 5 calls/sec on free tier
     return resp.json()
 
 
-def get_implementation_address(address: str) -> Optional[str]:
+def get_implementation_address(address: str, chain_id: int = 1) -> Optional[str]:
     """Check if a contract is a proxy and return its implementation address."""
     data = etherscan_get({
         "module": "contract",
         "action": "getsourcecode",
         "address": address,
-    })
+    }, chain_id=chain_id)
     if data.get("status") == "1" and data.get("result"):
         result = data["result"][0]
         if result.get("Proxy") == "1" and result.get("Implementation"):
@@ -52,19 +52,19 @@ def get_implementation_address(address: str) -> Optional[str]:
     return None
 
 
-def fetch_abi(address: str) -> Optional[List[Dict]]:
+def fetch_abi(address: str, chain_id: int = 1) -> Optional[List[Dict]]:
     """Fetch verified ABI from Etherscan V2."""
     data = etherscan_get({
         "module": "contract",
         "action": "getabi",
         "address": address,
-    })
+    }, chain_id=chain_id)
     if data.get("status") == "1" and data.get("result"):
         return json.loads(data["result"])
     return None
 
 
-def fetch_and_cache(name: str, address: str) -> Optional[List[Dict]]:
+def fetch_and_cache(name: str, address: str, chain_id: int = 1) -> Optional[List[Dict]]:
     """
     Fetch ABI for a contract, handling proxies automatically.
     Caches the result in abi_cache/{address}.json.
@@ -79,12 +79,12 @@ def fetch_and_cache(name: str, address: str) -> Optional[List[Dict]]:
     print(f"  Fetching {name:25s} {address[:14]}...", end="", flush=True)
 
     # Check if proxy
-    impl_addr = get_implementation_address(address)
+    impl_addr = get_implementation_address(address, chain_id=chain_id)
     if impl_addr:
         print(f" proxy → {impl_addr[:14]}...", end="", flush=True)
-        abi = fetch_abi(impl_addr)
+        abi = fetch_abi(impl_addr, chain_id=chain_id)
     else:
-        abi = fetch_abi(address)
+        abi = fetch_abi(address, chain_id=chain_id)
 
     if abi:
         funcs = [e["name"] for e in abi if e.get("type") == "function"]
@@ -111,25 +111,31 @@ def main():
     print("ABI Bootstrap — Fetching from Etherscan V2")
     print("=" * 60)
 
-    # Collect all unique contract addresses from playbook JSONs
-    contracts: Dict[str, str] = {}  # address -> name
+    # Collect all unique contract addresses from playbook JSONs (root + subdirs)
+    contracts: Dict[str, tuple] = {}  # address -> (name, chain_id)
     playbooks = []
-    for pb_file in sorted(playbooks_dir.glob("*.json")):
+    json_files = sorted(playbooks_dir.glob("*.json"))
+    for subdir in sorted(playbooks_dir.iterdir()):
+        if subdir.is_dir():
+            json_files.extend(sorted(subdir.glob("*.json")))
+
+    for pb_file in json_files:
         pb = json.loads(pb_file.read_text())
         playbooks.append(pb)
         protocol = pb.get("protocol", pb_file.stem)
+        chain_id = pb.get("chain_id", 1)
         for key, contract_info in pb.get("contracts", {}).items():
             addr = contract_info.get("address", "")
             if addr:
-                contracts[addr] = f"{protocol}/{key}"
+                contracts[addr] = (f"{protocol}/{key}", chain_id)
 
     print(f"Contracts to fetch: {len(contracts)}")
     print()
 
     # Fetch ABIs
     abi_map: Dict[str, List[Dict]] = {}  # address -> ABI
-    for addr, name in sorted(contracts.items(), key=lambda x: x[1]):
-        abi = fetch_and_cache(name, addr)
+    for addr, (name, chain_id) in sorted(contracts.items(), key=lambda x: x[1][0]):
+        abi = fetch_and_cache(name, addr, chain_id=chain_id)
         if abi:
             abi_map[addr.lower()] = abi
 

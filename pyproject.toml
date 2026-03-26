@@ -34,7 +34,7 @@ where = ["src"]
 include = ["defi_skills*"]
 
 [tool.setuptools.package-data]
-"defi_skills.data" = ["playbooks/*.json", "cache/*.json", "abi_cache/*.json", "registry/*.json"]
+"defi_skills.data" = ["playbooks/*.json", "playbooks/**/*.json", "cache/*.json", "abi_cache/*.json", "registry/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,0 +1,71 @@
+{
+  "protocol": "weth",
+  "version": "1.0",
+  "chain_id": 11155111,
+
+  "contracts": {
+    "weth": {
+      "address": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9",
+      "abi_source": "etherscan_cache"
+    }
+  },
+
+  "actions": {
+    "weth_wrap": {
+      "description": "Wrap ETH into WETH (deposit)",
+      "target_contract": "weth",
+      "function_name": "deposit",
+      "function_selector": "0xd0e30db0",
+      "abi_source": "etherscan_cache",
+      "value_logic": {
+        "type": "from_arg",
+        "source_arg": "value"
+      },
+      "required_payload_args": ["value", "human_readable_amount"],
+
+      "payload_args": {
+        "value": {
+          "source": "resolve_amount_or_balance",
+          "llm_field": "amount",
+          "fallback_llm_fields": ["value"],
+          "decimals_from": "$native",
+          "balance_of": "$native"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "{amount} ETH"
+        }
+      },
+
+      "param_mapping": []
+    },
+
+    "weth_unwrap": {
+      "description": "Unwrap WETH back to ETH (withdraw)",
+      "target_contract": "weth",
+      "function_name": "withdraw",
+      "function_selector": "0x2e1a7d4d",
+      "abi_source": "etherscan_cache",
+      "value_logic": { "type": "zero" },
+      "required_payload_args": ["wad", "human_readable_amount"],
+
+      "payload_args": {
+        "wad": {
+          "source": "resolve_amount_or_balance",
+          "llm_field": "amount",
+          "fallback_llm_fields": ["wad", "amount"],
+          "decimals_from": "$native",
+          "balance_of": "0x7b79995e5f793A07Bc00c21412e50Ecae098E7f9"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "{amount} WETH"
+        }
+      },
+
+      "param_mapping": [
+        { "name": "wad", "source": "arg", "arg_key": "wad", "coerce": "uint256" }
+      ]
+    }
+  }
+}

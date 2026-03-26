@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from eth_utils import to_checksum_address
 
+from defi_skills.engine.chains import get_approve_reset_tokens
 from defi_skills.engine.resolvers import (
     RESOLVER_REGISTRY,
     ResolveContext,
@@ -25,12 +26,6 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 PLAYBOOKS_DIR = DATA_DIR / "playbooks"
 
 UINT256_MAX = 2**256 - 1
-
-# Tokens that require approve(spender, 0) before approve(spender, newAmount).
-# USDT's approve() reverts if current allowance > 0 and new amount > 0.
-APPROVE_RESET_TOKENS = frozenset([
-    "0xdAC17F958D2ee523a2206206994597C13D831ec7",  # USDT (mainnet)
-])
 
 ERC20_APPROVE_ABI = {
     "name": "approve",
@@ -54,21 +49,32 @@ class PlaybookEngine:
     ):
         self.token_resolver = token_resolver
         self.ens_resolver = ens_resolver
-        self.playbooks: Dict[str, Dict] = {}     # action_name -> action_spec
-        self.playbook_meta: Dict[str, Dict] = {}  # action_name -> full playbook (for contracts)
+        self.playbooks: Dict[int, Dict[str, Dict]] = {}      # chain_id -> action_name -> action_spec
+        self.playbook_meta: Dict[int, Dict[str, Dict]] = {}   # chain_id -> action_name -> full playbook
         self.standard_abis: Dict[str, Dict] = {} # key -> ABI entry (from playbooks)
         self.registry: Dict[str, Dict] = {}       # protocol_name -> registry data
         self.load_playbooks(Path(playbooks_dir) if playbooks_dir else PLAYBOOKS_DIR)
         self.load_registry()
 
     def load_playbooks(self, playbooks_dir: Path) -> None:
-        """Load all .json playbook files and build action lookup."""
-        for pb_file in sorted(playbooks_dir.glob("*.json")):
+        """Load all .json playbook files from root and chain subdirs."""
+        json_files = sorted(playbooks_dir.glob("*.json"))
+        for subdir in sorted(playbooks_dir.iterdir()):
+            if subdir.is_dir():
+                json_files.extend(sorted(subdir.glob("*.json")))
+
+        for pb_file in json_files:
             pb = json.loads(pb_file.read_text())
+            chain_id = pb.get("chain_id", 1)
+
+            if chain_id not in self.playbooks:
+                self.playbooks[chain_id] = {}
+                self.playbook_meta[chain_id] = {}
+
             for action_name, action_spec in pb.get("actions", {}).items():
-                self.playbooks[action_name] = action_spec
-                self.playbook_meta[action_name] = pb
-            # Collect standard ABIs (e.g. from transfers.json)
+                self.playbooks[chain_id][action_name] = action_spec
+                self.playbook_meta[chain_id][action_name] = pb
+
             for key, abi_entry in pb.get("standard_abis", {}).items():
                 self.standard_abis[key] = abi_entry
 
@@ -92,22 +98,19 @@ class PlaybookEngine:
         supply_tokens = reg.get("supply_tokens")
         borrow_tokens = reg.get("borrow_tokens")
 
-        for action_name, spec in self.playbooks.items():
-            pb = self.playbook_meta.get(action_name, {})
-            if pb.get("protocol") != protocol:
-                continue
-
-            # EigenLayer: update valid_tokens + strategy_map on the playbook itself
-            if strategy_map is not None:
-                pb["strategy_map"] = strategy_map
-            if valid_tokens is not None and spec.get("valid_tokens") is not None:
-                spec["valid_tokens"] = valid_tokens
-
-            # Compound: supply vs borrow have different token lists
-            if supply_tokens is not None and ("supply" in action_name or "withdraw" in action_name):
-                spec["valid_tokens"] = supply_tokens
-            if borrow_tokens is not None and ("borrow" in action_name or "repay" in action_name):
-                spec["valid_tokens"] = borrow_tokens
+        for chain_id, actions in self.playbooks.items():
+            for action_name, spec in actions.items():
+                pb = self.playbook_meta[chain_id].get(action_name, {})
+                if pb.get("protocol") != protocol:
+                    continue
+                if strategy_map is not None:
+                    pb["strategy_map"] = strategy_map
+                if valid_tokens is not None and spec.get("valid_tokens") is not None:
+                    spec["valid_tokens"] = valid_tokens
+                if supply_tokens is not None and ("supply" in action_name or "withdraw" in action_name):
+                    spec["valid_tokens"] = supply_tokens
+                if borrow_tokens is not None and ("borrow" in action_name or "repay" in action_name):
+                    spec["valid_tokens"] = borrow_tokens
 
     # Stage 1: LLM output → ExecutablePayload
 
@@ -119,22 +122,12 @@ class PlaybookEngine:
     ) -> Optional[Dict[str, Any]]:
         """Convert LLM output to ExecutablePayload dict."""
         action = llm_output.get("action")
-        if not action or action not in self.playbooks:
+        chain_actions = self.playbooks.get(chain_id, {})
+        if not action or action not in chain_actions:
             return None
 
-        action_spec = self.playbooks[action]
-        playbook = self.playbook_meta[action]
-
-        # Reject chain_id mismatch: playbooks hardcode contract addresses for a
-        # specific chain. Using them on a different chain sends funds to wrong
-        # contracts (or non-existent ones).
-        playbook_chain = playbook.get("chain_id")
-        if playbook_chain and chain_id != playbook_chain:
-            raise ValueError(
-                f"Chain ID mismatch: requested chain_id={chain_id} but action "
-                f"'{action}' is defined for chain_id={playbook_chain}. "
-                f"All contract addresses in this playbook are for chain {playbook_chain}."
-            )
+        action_spec = chain_actions[action]
+        playbook = self.playbook_meta[chain_id][action]
 
         args = llm_output.get("arguments") or {}
 
@@ -401,13 +394,14 @@ class PlaybookEngine:
             return None
 
         action = payload.get("action")
-        if not action or action not in self.playbooks:
+        chain_id = payload.get("chain_id", 1)
+        chain_actions = self.playbooks.get(chain_id, {})
+        if not action or action not in chain_actions:
             return None
 
-        action_spec = self.playbooks[action]
+        action_spec = chain_actions[action]
         args = payload.get("arguments") or {}
         target_contract = payload.get("target_contract")
-        chain_id = payload.get("chain_id", 1)
 
         # Determine function_name, param_mapping, and ABI (may be overridden)
         function_name = payload.get("function_name")
@@ -440,7 +434,7 @@ class PlaybookEngine:
         selector = action_spec.get("function_selector")
         abi_entry = self.get_abi_entry(
             action, abi_source, standard_abi_key, function_name,
-            selector=selector,
+            selector=selector, chain_id=chain_id,
         )
         if abi_entry is None:
             return None
@@ -477,14 +471,15 @@ class PlaybookEngine:
         standard_abi_key: Optional[str],
         function_name: str,
         selector: str = None,
+        chain_id: int = 1,
     ) -> Optional[Dict]:
         """Load the ABI entry for encoding directly from playbook data."""
         if abi_source == "standard" and standard_abi_key:
             return self.standard_abis.get(standard_abi_key)
         if abi_source == "etherscan_cache":
             # Resolve contract address from the playbook's contracts section
-            action_spec = self.playbooks.get(action)
-            playbook = self.playbook_meta.get(action)
+            action_spec = self.playbooks.get(chain_id, {}).get(action)
+            playbook = self.playbook_meta.get(chain_id, {}).get(action)
             if not action_spec or not playbook:
                 return None
             target_key = action_spec.get("target_contract")
@@ -638,24 +633,24 @@ class PlaybookEngine:
 
     # Utility
 
-    def get_required_payload_args(self) -> Dict[str, List[str]]:
+    def get_required_payload_args(self, chain_id: int = 1) -> Dict[str, List[str]]:
         """Build ACTION_REQUIRED_ARGS dict from playbook specs."""
         result = {}
-        for action_name, spec in self.playbooks.items():
+        for action_name, spec in self.playbooks.get(chain_id, {}).items():
             result[action_name] = spec.get("required_payload_args", [])
         return result
 
-    def get_supported_actions(self) -> List[str]:
+    def get_supported_actions(self, chain_id: int = 1) -> List[str]:
         """Return list of all action names from loaded playbooks."""
-        return list(self.playbooks.keys())
+        return list(self.playbooks.get(chain_id, {}).keys())
 
-    def get_actions_by_protocol(self) -> Dict[str, List[Dict]]:
+    def get_actions_by_protocol(self, chain_id: int = 1) -> Dict[str, List[Dict]]:
         """Return actions grouped by protocol: {protocol: [{action, description}, ...]}."""
         by_protocol = {}
-        for name in self.get_supported_actions():
-            pb = self.playbook_meta.get(name, {})
+        for name in self.get_supported_actions(chain_id):
+            pb = self.playbook_meta.get(chain_id, {}).get(name, {})
             protocol = pb.get("protocol", "unknown")
-            desc = self.playbooks.get(name, {}).get("description", "")
+            desc = self.playbooks.get(chain_id, {}).get(name, {}).get("description", "")
             by_protocol.setdefault(protocol, []).append({"action": name, "description": desc})
         return by_protocol
 
@@ -681,7 +676,8 @@ class PlaybookEngine:
             }
 
         txs = []
-        if token_cs in APPROVE_RESET_TOKENS:
+        approve_reset = get_approve_reset_tokens(chain_id)
+        if token_cs in approve_reset:
             txs.append(encode_approve(0))
         txs.append(encode_approve(UINT256_MAX))
         return txs

@@ -27,13 +27,23 @@ ERC20_BYTES32_ABI = [
 class TokenResolver:
     """Live token resolver with persistent file cache and optional on-chain/API lookups."""
 
-    def __init__(self, cache_path: Optional[str] = None, w3=None):
-        self.cache_path = Path(cache_path) if cache_path else DEFAULT_CACHE_PATH
+    def __init__(self, cache_path: Optional[str] = None, w3=None, chain_id: int = 1):
+        from defi_skills.engine.chains import get_chain_config, get_rpc_url
+
+        self.chain_id = chain_id
+        self.chain_config = get_chain_config(chain_id)
+
+        # Per-chain cache path
+        if cache_path:
+            self.cache_path = Path(cache_path)
+        else:
+            cache_filename = f"token_cache_{chain_id}.json" if chain_id != 1 else "token_cache.json"
+            self.cache_path = DATA_DIR / "cache" / cache_filename
 
         # In-memory indexes
-        self.erc20_by_symbol: Dict[str, Dict] = {}   # uppercase symbol -> {address, decimals, symbol, name}
-        self.erc20_by_address: Dict[str, Dict] = {}   # lowercased address -> same dict
-        self.erc721_collections: Dict[str, Dict] = {}  # lowercased alias -> {address, name, symbol}
+        self.erc20_by_symbol: Dict[str, Dict] = {}
+        self.erc20_by_address: Dict[str, Dict] = {}
+        self.erc721_collections: Dict[str, Dict] = {}
 
         self.load_cache()
 
@@ -44,9 +54,8 @@ class TokenResolver:
             if api_key:
                 try:
                     from web3 import Web3
-                    base_url = os.getenv("ALCHEMY_URL", "https://eth-mainnet.g.alchemy.com/v2")
-                    provider_url = f"{base_url}/{api_key}"
-                    self.w3 = Web3(Web3.HTTPProvider(provider_url))
+                    rpc_url = get_rpc_url(chain_id)
+                    self.w3 = Web3(Web3.HTTPProvider(rpc_url))
                 except Exception:
                     self.w3 = None
 
@@ -200,12 +209,17 @@ class TokenResolver:
             return None
 
     def query_1inch(self, symbol: str) -> Optional[Dict]:
-        """Tier 3: 1inch Token API — symbol -> {address, decimals, symbol, name}."""
+        """Tier 3: 1inch Token API - symbol -> {address, decimals, symbol, name}."""
         if not self.oneinch_api_key:
+            return None
+        if self.chain_config.oneinch_chain_id is None:
             return None
         try:
             import requests
-            base_url = os.getenv("ONEINCH_URL", "https://api.1inch.com/token/v1.4/1")
+            base_url = os.getenv(
+                "ONEINCH_URL",
+                f"https://api.1inch.com/token/v1.4/{self.chain_config.oneinch_chain_id}",
+            )
             url = f"{base_url}/search"
             headers = {"Authorization": f"Bearer {self.oneinch_api_key}"}
             params = {
@@ -237,7 +251,8 @@ class TokenResolver:
             return None
         try:
             import requests
-            url = f"https://eth-mainnet.g.alchemy.com/nft/v3/{api_key}/getContractMetadata"
+            slug = self.chain_config.alchemy_network_slug
+            url = f"https://{slug}.g.alchemy.com/nft/v3/{api_key}/getContractMetadata"
             resp = requests.get(url, params={"contractAddress": contract_address}, timeout=10)
             resp.raise_for_status()
             data = resp.json()
@@ -266,7 +281,8 @@ class TokenResolver:
             return None
         try:
             import requests
-            url = f"https://eth-mainnet.g.alchemy.com/nft/v3/{api_key}/searchContractMetadata"
+            slug = self.chain_config.alchemy_network_slug
+            url = f"https://{slug}.g.alchemy.com/nft/v3/{api_key}/searchContractMetadata"
             resp = requests.get(url, params={"query": query}, timeout=10)
             resp.raise_for_status()
             data = resp.json()
