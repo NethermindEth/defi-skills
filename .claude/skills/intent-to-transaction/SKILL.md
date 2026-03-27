@@ -59,7 +59,7 @@ Examples:
 The CLI must be installed and a wallet address configured:
 
 ```bash
-npm install defi-skills --registry https://nethermind.jfrog.io/artifactory/api/npm/
+pip install defi-skills --extra-index-url https://nethermind.jfrog.io/artifactory/api/pypi/kyoto-pypi-local-prod/simple
 defi-skills config set-wallet "$WALLET_ADDRESS"
 ```
 
@@ -238,7 +238,7 @@ The CLI is stateless. Each build call is independent with no memory of previous 
 - **Negative amount**: Amounts must be zero or positive.
 - **ENS resolution failed**: The user needs to run `defi-skills config set alchemy_api_key <KEY>`, or provide a hex address instead.
 - **Missing wallet**: Run `defi-skills config set-wallet <address>`.
-- **CLI not found**: Run `npm install defi-skills --registry https://nethermind.jfrog.io/artifactory/api/npm/`.
+- **CLI not found**: Run `pip install defi-skills --extra-index-url https://nethermind.jfrog.io/artifactory/api/pypi/kyoto-pypi-local-prod/simple`.
 
 ## Safety
 

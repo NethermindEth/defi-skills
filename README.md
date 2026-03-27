@@ -6,12 +6,24 @@ Translate natural language into unsigned DeFi transaction payloads. A data-drive
 
 ## Quick Start
 
+### Install via pip (recommended)
+
+```bash
+pip install defi-skills --extra-index-url https://nethermind.jfrog.io/artifactory/api/pypi/kyoto-pypi-local-prod/simple
+```
+
+### Or clone the repo
+
 ```bash
 git clone https://github.com/NethermindEth/defi-skills
 cd defi-skills
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e .
+```
 
+### Get started
+
+```bash
 defi-skills config setup     # interactive wizard
 defi-skills actions           # list all supported actions
 ```
