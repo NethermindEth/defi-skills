@@ -1,17 +1,6 @@
 ---
 name: intent-to-transaction
 description: "Build unsigned DeFi transactions from natural language. Use when the user wants to send, transfer, swap, stake, unstake, wrap, unwrap, supply, withdraw, borrow, repay, deposit, delegate, add liquidity, or remove liquidity on-chain. Covers ETH, ERC-20, ERC-721, Aave, Lido, Uniswap, Curve, Compound, MakerDAO, Rocket Pool, EigenLayer, Balancer, and WETH."
-license: MIT
-metadata:
-  author: nethermind
-  version: "0.1.0"
-  openclaw:
-    requires:
-      bins:
-        - defi-skills
-      env:
-        - WALLET_ADDRESS
-    primaryEnv: WALLET_ADDRESS
 ---
 
 # Intent to Transaction
@@ -59,7 +48,7 @@ Examples:
 The CLI must be installed and a wallet address configured:
 
 ```bash
-npm install defi-skills --registry https://nethermind.jfrog.io/artifactory/api/npm/
+pip install defi-skills --extra-index-url https://nethermind.jfrog.io/artifactory/api/pypi/kyoto-pypi-local-prod/simple
 defi-skills config set-wallet "$WALLET_ADDRESS"
 ```
 
@@ -238,7 +227,7 @@ The CLI is stateless. Each build call is independent with no memory of previous 
 - **Negative amount**: Amounts must be zero or positive.
 - **ENS resolution failed**: The user needs to run `defi-skills config set alchemy_api_key <KEY>`, or provide a hex address instead.
 - **Missing wallet**: Run `defi-skills config set-wallet <address>`.
-- **CLI not found**: Run `npm install defi-skills --registry https://nethermind.jfrog.io/artifactory/api/npm/`.
+- **CLI not found**: Run `pip install defi-skills --extra-index-url https://nethermind.jfrog.io/artifactory/api/pypi/kyoto-pypi-local-prod/simple`.
 
 ## Safety
 

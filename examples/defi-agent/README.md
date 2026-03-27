@@ -36,7 +36,7 @@ A fully working DeFi agent built on the [defi-skills](../../README.md) engine. T
 
 ```bash
 # 1. Install the engine
-npm install defi-skills --registry https://nethermind.jfrog.io/artifactory/api/npm/
+pip install defi-skills --extra-index-url https://nethermind.jfrog.io/artifactory/api/pypi/kyoto-pypi-local-prod/simple
 
 # 2. Configure
 defi-skills config set-wallet "0xYourWalletAddress"
