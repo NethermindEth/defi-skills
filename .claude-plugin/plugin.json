@@ -1,0 +1,11 @@
+{
+  "name": "nethermind-defi-skills",
+  "version": "0.1.0",
+  "author": {
+    "name": "Nethermind"
+  },
+  "description": "Natural language to unsigned DeFi transactions. Translates natural language intents into transaction payloads across 12 protocols (Aave, Lido, Uniswap, Curve, Compound, MakerDAO, Rocket Pool, EigenLayer, Balancer, WETH, ERC-20, ERC-721). Deterministic, no signing, no private keys.",
+  "homepage": "https://defi-skills.nethermind.io/",
+  "repository": "https://github.com/NethermindEth/defi-skills",
+  "license": "MIT-0"
+}

@@ -1,17 +1,6 @@
 ---
 name: intent-to-transaction
 description: "Build unsigned DeFi transactions from natural language. Use when the user wants to send, transfer, swap, stake, unstake, wrap, unwrap, supply, withdraw, borrow, repay, deposit, delegate, add liquidity, or remove liquidity on-chain. Covers ETH, ERC-20, ERC-721, Aave, Lido, Uniswap, Curve, Compound, MakerDAO, Rocket Pool, EigenLayer, Balancer, and WETH."
-license: MIT
-metadata:
-  author: nethermind
-  version: "0.1.0"
-  openclaw:
-    requires:
-      bins:
-        - defi-skills
-      env:
-        - WALLET_ADDRESS
-    primaryEnv: WALLET_ADDRESS
 ---
 
 # Intent to Transaction
