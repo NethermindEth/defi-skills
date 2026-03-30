@@ -68,6 +68,12 @@ from defi_skills.engine.resolvers.aave import (
     resolve_aave_reward_assets,
 )
 
+from defi_skills.engine.resolvers.pendle import (
+    resolve_pendle_market,
+    resolve_pendle_min_out,
+    resolve_pendle_yt,
+)
+
 
 RESOLVER_REGISTRY = {
     "resolve_token_address": resolve_token_address,
@@ -103,4 +109,7 @@ RESOLVER_REGISTRY = {
     "resolve_balancer_pool_tokens": resolve_balancer_pool_tokens,
     "resolve_balancer_userdata": resolve_balancer_userdata,
     "resolve_eigenlayer_queued_withdrawals": resolve_eigenlayer_queued_withdrawals,
+    "resolve_pendle_market": resolve_pendle_market,
+    "resolve_pendle_min_out": resolve_pendle_min_out,
+    "resolve_pendle_yt": resolve_pendle_yt,
 }

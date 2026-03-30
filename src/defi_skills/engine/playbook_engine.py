@@ -578,6 +578,12 @@ class PlaybookEngine:
             return self.coerce_value(None, coerce, from_address)
         if source == "constant":
             return self.coerce_value(entry.get("value"), coerce, from_address)
+        if source == "struct":
+            struct_values = []
+            for field_entry in entry.get("fields", []):
+                field_val = self.resolve_param_entry(field_entry, args, from_address)
+                struct_values.append(field_val)
+            return tuple(struct_values)
         return None
 
     def coerce_value(self, value: Any, coerce: str, from_address: str) -> Any:

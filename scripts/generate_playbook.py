@@ -62,11 +62,14 @@ MAX_AMOUNT_KEYWORDS = {"withdraw", "redeem", "repay", "remove", "exit", "unstake
 
 # ABI helpers
 
-def load_contract_abis(contracts: Dict[str, str]) -> Dict[str, Tuple[str, List[Dict]]]:
+def load_contract_abis(
+    contracts: Dict[str, str],
+    extra_facets: Optional[List[str]] = None,
+) -> Dict[str, Tuple[str, List[Dict]]]:
     """Load ABIs for all contracts. Returns {label: (address, abi)}."""
     result = {}
     for label, address in contracts.items():
-        abi = fetch_and_cache(label, address)
+        abi = fetch_and_cache(label, address, extra_facets=extra_facets)
         if abi is None:
             print(f"  WARNING: Could not fetch ABI for {label} ({address})")
             continue
@@ -530,8 +533,8 @@ def build_payload_arg(
 
     elif role == "amount":
         arg_key = extra.get("arg_key", "amount")
-        decimals_from = extra.get("decimals_from", "$asset")
-        balance_of = extra.get("balance_of", "$asset")
+        decimals_from = str(extra.get("decimals_from", "$asset"))
+        balance_of = str(extra.get("balance_of", "$asset"))
 
         # Three-tier "max" handling:
         # - "sentinel": UINT256_MAX (only Aave/Compound withdraw/repay)
@@ -705,6 +708,10 @@ def main():
         help="Output path (default: data/playbooks/{protocol}.json)",
     )
     parser.add_argument("--interactive", action="store_true", help="Interactively select functions")
+    parser.add_argument(
+        "--facets", nargs="+", default=None,
+        help="Extra facet addresses for multi-facet/Diamond proxies (e.g. 0x... 0x...)",
+    )
     args = parser.parse_args()
 
     # Parse contracts
@@ -726,7 +733,7 @@ def main():
 
     # Step 1: Fetch ABIs
     print("Step 1: Fetching ABIs...")
-    abi_map = load_contract_abis(contracts)
+    abi_map = load_contract_abis(contracts, extra_facets=args.facets)
     if not abi_map:
         print("ERROR: No ABIs could be loaded.")
         sys.exit(1)

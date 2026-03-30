@@ -1,6 +1,6 @@
 ---
 name: intent-to-transaction
-description: "Build unsigned DeFi transactions from natural language. Use when the user wants to send, transfer, swap, stake, unstake, wrap, unwrap, supply, withdraw, borrow, repay, deposit, delegate, add liquidity, or remove liquidity on-chain. Covers ETH, ERC-20, ERC-721, Aave, Lido, Uniswap, Curve, Compound, MakerDAO, Rocket Pool, EigenLayer, Balancer, and WETH."
+description: "Build unsigned DeFi transactions from natural language. Use when the user wants to send, transfer, swap, stake, unstake, wrap, unwrap, supply, withdraw, borrow, repay, deposit, delegate, add liquidity, remove liquidity, or trade yield tokens on-chain. Covers ETH, ERC-20, ERC-721, Aave, Lido, Uniswap, Curve, Compound, MakerDAO, Rocket Pool, EigenLayer, Balancer, Pendle, and WETH."
 ---
 
 # Intent to Transaction
@@ -161,6 +161,7 @@ On failure: `{"success": false, "error": "description of what went wrong"}`.
 | Rocket Pool | `rocketpool_stake`, `rocketpool_unstake` |
 | EigenLayer | `eigenlayer_deposit`, `eigenlayer_delegate`, `eigenlayer_undelegate`, `eigenlayer_queue_withdrawals`, `eigenlayer_complete_withdrawal` |
 | Balancer V2 | `balancer_swap`, `balancer_join_pool`, `balancer_exit_pool` |
+| Pendle V2 | `pendle_swap_token_for_pt`, `pendle_swap_pt_for_token`, `pendle_swap_token_for_yt`, `pendle_swap_yt_for_token`, `pendle_add_liquidity`, `pendle_remove_liquidity`, `pendle_mint_py`, `pendle_redeem_py`, `pendle_claim_rewards` |
 
 ## How to Build Any Action
 

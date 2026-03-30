@@ -120,6 +120,10 @@ def print_sim_result(result):
 
 def describe_field(llm_field, source, arg_spec):
     """Return a human-readable hint for a field."""
+    # Prefer playbook-provided description if available
+    desc = arg_spec.get("description")
+    if desc:
+        return desc
     if source == "resolve_token_address":
         return "token symbol (e.g. USDC, ETH, WETH)"
     if source in ("resolve_amount", "resolve_amount_or_max", "resolve_amount_or_balance"):
@@ -157,6 +161,8 @@ SKIP_SOURCES = frozenset({
     "resolve_eigenlayer_deposits", "resolve_eigenlayer_queued_withdrawals",
     "resolve_lido_withdrawal_requests", "resolve_lido_checkpoint_hints",
     "resolve_aave_reward_assets",
+    "resolve_pendle_min_out",
+    "resolve_pendle_yt",
 })
 
 

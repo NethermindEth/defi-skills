@@ -1,0 +1,219 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "claimOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes4",
+        "name": "selector",
+        "type": "bytes4"
+      }
+    ],
+    "name": "facetAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "res",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getBulkSellerFactory",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getDefaultApproxParams",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "guessMin",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "guessMax",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "guessOffchain",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxIteration",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "eps",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ApproxParams",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getOwnerAndPendingOwner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "_owner",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_pendingOwner",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_bulkSellerFactory",
+        "type": "address"
+      }
+    ],
+    "name": "setBulkSellerFactory",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "guessMin",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "guessMax",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "guessOffchain",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxIteration",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "eps",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct ApproxParams",
+        "name": "params",
+        "type": "tuple"
+      }
+    ],
+    "name": "setDefaultApproxParams",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "facet",
+            "type": "address"
+          },
+          {
+            "internalType": "bytes4[]",
+            "name": "selectors",
+            "type": "bytes4[]"
+          }
+        ],
+        "internalType": "struct IPMiniDiamond.SelectorsToFacet[]",
+        "name": "arr",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "setFacetForSelectors",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "direct",
+        "type": "bool"
+      },
+      {
+        "internalType": "bool",
+        "name": "renounce",
+        "type": "bool"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

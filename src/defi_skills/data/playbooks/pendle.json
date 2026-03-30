@@ -1,0 +1,1593 @@
+{
+  "protocol": "pendle",
+  "version": "1.0",
+  "chain_id": 1,
+  "contracts": {
+    "router": {
+      "address": "0x888888888889758F76e7103c6CbF23ABbF58F946",
+      "abi_source": "etherscan_cache"
+    }
+  },
+  "actions": {
+    "pendle_swap_token_for_pt": {
+      "description": "Swap an ERC-20 token for Principal Token (PT) on a Pendle market",
+      "target_contract": "router",
+      "function_name": "swapExactTokenForPt",
+      "function_selector": "0xc81f847a",
+      "abi_source": "etherscan_cache",
+      "value_logic": {
+        "type": "zero"
+      },
+      "approvals": [
+        {
+          "token": "$asset",
+          "spender": "target_contract"
+        }
+      ],
+      "required_payload_args": [
+        "to",
+        "market",
+        "asset",
+        "amount",
+        "min_out",
+        "human_readable_amount"
+      ],
+      "payload_args": {
+        "to": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "to",
+          "context_field": "from_address"
+        },
+        "market": {
+          "source": "resolve_pendle_market",
+          "llm_field": "market",
+          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address — auto-resolves to the active Pendle market"
+        },
+        "asset": {
+          "source": "resolve_token_address",
+          "llm_field": "asset",
+          "description": "Token to spend — name (e.g. \"USDC\") or address"
+        },
+        "amount": {
+          "source": "resolve_amount_or_balance",
+          "llm_field": "amount",
+          "fallback_llm_fields": [
+            "amount"
+          ],
+          "decimals_from": "$asset",
+          "balance_of": "$asset",
+          "description": "Human-readable amount (e.g. \"1\", \"100\", \"max\")"
+        },
+        "slippage": {
+          "source": "llm_passthrough",
+          "llm_field": "slippage",
+          "optional": true,
+          "description": "Slippage tolerance in percent (e.g. \"1\" for 1%). Default: 0.5%"
+        },
+        "min_out": {
+          "source": "resolve_pendle_min_out",
+          "function_name": "swapExactTokenForPt",
+          "slippage_bps": 50
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "Swap {amount} {asset} for PT on Pendle market"
+        }
+      },
+      "param_mapping": [
+        {
+          "name": "receiver",
+          "source": "arg",
+          "arg_key": "to",
+          "coerce": "address"
+        },
+        {
+          "name": "market",
+          "source": "arg",
+          "arg_key": "market",
+          "coerce": "address"
+        },
+        {
+          "name": "minPtOut",
+          "source": "arg",
+          "arg_key": "min_out",
+          "coerce": "uint256"
+        },
+        {
+          "name": "guessPtOut",
+          "source": "struct",
+          "fields": [
+            {
+              "name": "guessMin",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "guessMax",
+              "source": "constant",
+              "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+              "coerce": "uint256"
+            },
+            {
+              "name": "guessOffchain",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "maxIteration",
+              "source": "constant",
+              "value": 256,
+              "coerce": "uint256"
+            },
+            {
+              "name": "eps",
+              "source": "constant",
+              "value": "100000000000000",
+              "coerce": "uint256"
+            }
+          ]
+        },
+        {
+          "name": "input",
+          "source": "struct",
+          "fields": [
+            {
+              "name": "tokenIn",
+              "source": "arg",
+              "arg_key": "asset",
+              "coerce": "address"
+            },
+            {
+              "name": "netTokenIn",
+              "source": "arg",
+              "arg_key": "amount",
+              "coerce": "uint256"
+            },
+            {
+              "name": "tokenMintSy",
+              "source": "arg",
+              "arg_key": "asset",
+              "coerce": "address"
+            },
+            {
+              "name": "pendleSwap",
+              "source": "constant",
+              "value": "0x0000000000000000000000000000000000000000",
+              "coerce": "address"
+            },
+            {
+              "name": "swapData",
+              "source": "struct",
+              "fields": [
+                {
+                  "name": "swapType",
+                  "source": "constant",
+                  "value": 0,
+                  "coerce": "uint256"
+                },
+                {
+                  "name": "extRouter",
+                  "source": "constant",
+                  "value": "0x0000000000000000000000000000000000000000",
+                  "coerce": "address"
+                },
+                {
+                  "name": "extCalldata",
+                  "source": "constant",
+                  "value": "0x",
+                  "coerce": "bytes"
+                },
+                {
+                  "name": "needScale",
+                  "source": "constant",
+                  "value": false,
+                  "coerce": "bool"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "limit",
+          "source": "struct",
+          "fields": [
+            {
+              "name": "limitRouter",
+              "source": "constant",
+              "value": "0x0000000000000000000000000000000000000000",
+              "coerce": "address"
+            },
+            {
+              "name": "epsSkipMarket",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "normalFills",
+              "source": "constant",
+              "value": [],
+              "coerce": "tuple[]"
+            },
+            {
+              "name": "flashFills",
+              "source": "constant",
+              "value": [],
+              "coerce": "tuple[]"
+            },
+            {
+              "name": "optData",
+              "source": "constant",
+              "value": "0x",
+              "coerce": "bytes"
+            }
+          ]
+        }
+      ]
+    },
+    "pendle_swap_pt_for_token": {
+      "description": "Swap Principal Token (PT) for an ERC-20 token on a Pendle market",
+      "target_contract": "router",
+      "function_name": "swapExactPtForToken",
+      "function_selector": "0x594a88cc",
+      "abi_source": "etherscan_cache",
+      "value_logic": {
+        "type": "zero"
+      },
+      "required_payload_args": [
+        "to",
+        "market",
+        "asset_out",
+        "amount",
+        "min_out",
+        "human_readable_amount"
+      ],
+      "payload_args": {
+        "to": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "to",
+          "context_field": "from_address"
+        },
+        "market": {
+          "source": "resolve_pendle_market",
+          "llm_field": "market",
+          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address — auto-resolves to the active Pendle market"
+        },
+        "asset_out": {
+          "source": "resolve_token_address",
+          "llm_field": "asset_out",
+          "description": "Token to receive — name (e.g. \"wstETH\") or address"
+        },
+        "amount": {
+          "source": "resolve_amount",
+          "llm_field": "amount",
+          "fallback_llm_fields": [
+            "amount"
+          ],
+          "decimals_from": "$asset_out",
+          "description": "Human-readable amount (e.g. \"1\", \"100\", \"max\")"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "Swap {amount} PT for {asset_out} on Pendle market"
+        },
+        "slippage": {
+          "source": "llm_passthrough",
+          "llm_field": "slippage",
+          "optional": true,
+          "description": "Slippage tolerance in percent (e.g. \"1\" for 1%). Default: 0.5%"
+        },
+        "min_out": {
+          "source": "resolve_pendle_min_out",
+          "function_name": "swapExactPtForToken",
+          "slippage_bps": 50
+        }
+      },
+      "param_mapping": [
+        {
+          "name": "receiver",
+          "source": "arg",
+          "arg_key": "to",
+          "coerce": "address"
+        },
+        {
+          "name": "market",
+          "source": "arg",
+          "arg_key": "market",
+          "coerce": "address"
+        },
+        {
+          "name": "exactPtIn",
+          "source": "arg",
+          "arg_key": "amount",
+          "coerce": "uint256"
+        },
+        {
+          "name": "output",
+          "source": "struct",
+          "fields": [
+            {
+              "name": "tokenOut",
+              "source": "arg",
+              "arg_key": "asset_out",
+              "coerce": "address"
+            },
+            {
+              "name": "minTokenOut",
+              "source": "arg",
+              "coerce": "uint256",
+              "arg_key": "min_out"
+            },
+            {
+              "name": "tokenRedeemSy",
+              "source": "arg",
+              "arg_key": "asset_out",
+              "coerce": "address"
+            },
+            {
+              "name": "pendleSwap",
+              "source": "constant",
+              "value": "0x0000000000000000000000000000000000000000",
+              "coerce": "address"
+            },
+            {
+              "name": "swapData",
+              "source": "struct",
+              "fields": [
+                {
+                  "name": "swapType",
+                  "source": "constant",
+                  "value": 0,
+                  "coerce": "uint256"
+                },
+                {
+                  "name": "extRouter",
+                  "source": "constant",
+                  "value": "0x0000000000000000000000000000000000000000",
+                  "coerce": "address"
+                },
+                {
+                  "name": "extCalldata",
+                  "source": "constant",
+                  "value": "0x",
+                  "coerce": "bytes"
+                },
+                {
+                  "name": "needScale",
+                  "source": "constant",
+                  "value": false,
+                  "coerce": "bool"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "limit",
+          "source": "struct",
+          "fields": [
+            {
+              "name": "limitRouter",
+              "source": "constant",
+              "value": "0x0000000000000000000000000000000000000000",
+              "coerce": "address"
+            },
+            {
+              "name": "epsSkipMarket",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "normalFills",
+              "source": "constant",
+              "value": [],
+              "coerce": "tuple[]"
+            },
+            {
+              "name": "flashFills",
+              "source": "constant",
+              "value": [],
+              "coerce": "tuple[]"
+            },
+            {
+              "name": "optData",
+              "source": "constant",
+              "value": "0x",
+              "coerce": "bytes"
+            }
+          ]
+        }
+      ],
+      "approvals": [
+        {
+          "token": "$_pendle_pt",
+          "spender": "target_contract"
+        }
+      ]
+    },
+    "pendle_swap_token_for_yt": {
+      "description": "Swap an ERC-20 token for Yield Token (YT) on a Pendle market",
+      "target_contract": "router",
+      "function_name": "swapExactTokenForYt",
+      "function_selector": "0xed48907e",
+      "abi_source": "etherscan_cache",
+      "value_logic": {
+        "type": "zero"
+      },
+      "approvals": [
+        {
+          "token": "$asset",
+          "spender": "target_contract"
+        }
+      ],
+      "required_payload_args": [
+        "to",
+        "market",
+        "asset",
+        "amount",
+        "min_out",
+        "human_readable_amount"
+      ],
+      "payload_args": {
+        "to": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "to",
+          "context_field": "from_address"
+        },
+        "market": {
+          "source": "resolve_pendle_market",
+          "llm_field": "market",
+          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address — auto-resolves to the active Pendle market"
+        },
+        "asset": {
+          "source": "resolve_token_address",
+          "llm_field": "asset",
+          "description": "Token to spend — name (e.g. \"USDC\") or address"
+        },
+        "amount": {
+          "source": "resolve_amount_or_balance",
+          "llm_field": "amount",
+          "fallback_llm_fields": [
+            "amount"
+          ],
+          "decimals_from": "$asset",
+          "balance_of": "$asset",
+          "description": "Human-readable amount (e.g. \"1\", \"100\", \"max\")"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "Swap {amount} {asset} for YT on Pendle market"
+        },
+        "slippage": {
+          "source": "llm_passthrough",
+          "llm_field": "slippage",
+          "optional": true,
+          "description": "Slippage tolerance in percent (e.g. \"1\" for 1%). Default: 0.5%"
+        },
+        "min_out": {
+          "source": "resolve_pendle_min_out",
+          "function_name": "swapExactTokenForYt",
+          "slippage_bps": 50
+        }
+      },
+      "param_mapping": [
+        {
+          "name": "receiver",
+          "source": "arg",
+          "arg_key": "to",
+          "coerce": "address"
+        },
+        {
+          "name": "market",
+          "source": "arg",
+          "arg_key": "market",
+          "coerce": "address"
+        },
+        {
+          "name": "minYtOut",
+          "source": "arg",
+          "coerce": "uint256",
+          "arg_key": "min_out"
+        },
+        {
+          "name": "guessYtOut",
+          "source": "struct",
+          "fields": [
+            {
+              "name": "guessMin",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "guessMax",
+              "source": "constant",
+              "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+              "coerce": "uint256"
+            },
+            {
+              "name": "guessOffchain",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "maxIteration",
+              "source": "constant",
+              "value": 256,
+              "coerce": "uint256"
+            },
+            {
+              "name": "eps",
+              "source": "constant",
+              "value": "100000000000000",
+              "coerce": "uint256"
+            }
+          ]
+        },
+        {
+          "name": "input",
+          "source": "struct",
+          "fields": [
+            {
+              "name": "tokenIn",
+              "source": "arg",
+              "arg_key": "asset",
+              "coerce": "address"
+            },
+            {
+              "name": "netTokenIn",
+              "source": "arg",
+              "arg_key": "amount",
+              "coerce": "uint256"
+            },
+            {
+              "name": "tokenMintSy",
+              "source": "arg",
+              "arg_key": "asset",
+              "coerce": "address"
+            },
+            {
+              "name": "pendleSwap",
+              "source": "constant",
+              "value": "0x0000000000000000000000000000000000000000",
+              "coerce": "address"
+            },
+            {
+              "name": "swapData",
+              "source": "struct",
+              "fields": [
+                {
+                  "name": "swapType",
+                  "source": "constant",
+                  "value": 0,
+                  "coerce": "uint256"
+                },
+                {
+                  "name": "extRouter",
+                  "source": "constant",
+                  "value": "0x0000000000000000000000000000000000000000",
+                  "coerce": "address"
+                },
+                {
+                  "name": "extCalldata",
+                  "source": "constant",
+                  "value": "0x",
+                  "coerce": "bytes"
+                },
+                {
+                  "name": "needScale",
+                  "source": "constant",
+                  "value": false,
+                  "coerce": "bool"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "limit",
+          "source": "struct",
+          "fields": [
+            {
+              "name": "limitRouter",
+              "source": "constant",
+              "value": "0x0000000000000000000000000000000000000000",
+              "coerce": "address"
+            },
+            {
+              "name": "epsSkipMarket",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "normalFills",
+              "source": "constant",
+              "value": [],
+              "coerce": "tuple[]"
+            },
+            {
+              "name": "flashFills",
+              "source": "constant",
+              "value": [],
+              "coerce": "tuple[]"
+            },
+            {
+              "name": "optData",
+              "source": "constant",
+              "value": "0x",
+              "coerce": "bytes"
+            }
+          ]
+        }
+      ]
+    },
+    "pendle_swap_yt_for_token": {
+      "description": "Swap Yield Token (YT) for an ERC-20 token on a Pendle market",
+      "target_contract": "router",
+      "function_name": "swapExactYtForToken",
+      "function_selector": "0x05eb5327",
+      "abi_source": "etherscan_cache",
+      "value_logic": {
+        "type": "zero"
+      },
+      "required_payload_args": [
+        "to",
+        "market",
+        "asset_out",
+        "amount",
+        "min_out",
+        "human_readable_amount"
+      ],
+      "payload_args": {
+        "to": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "to",
+          "context_field": "from_address"
+        },
+        "market": {
+          "source": "resolve_pendle_market",
+          "llm_field": "market",
+          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address — auto-resolves to the active Pendle market"
+        },
+        "asset_out": {
+          "source": "resolve_token_address",
+          "llm_field": "asset_out",
+          "description": "Token to receive — name (e.g. \"wstETH\") or address"
+        },
+        "amount": {
+          "source": "resolve_amount",
+          "llm_field": "amount",
+          "fallback_llm_fields": [
+            "amount"
+          ],
+          "decimals_from": "$asset_out",
+          "description": "Human-readable amount (e.g. \"1\", \"100\", \"max\")"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "Swap {amount} YT for {asset_out} on Pendle market"
+        },
+        "slippage": {
+          "source": "llm_passthrough",
+          "llm_field": "slippage",
+          "optional": true,
+          "description": "Slippage tolerance in percent (e.g. \"1\" for 1%). Default: 0.5%"
+        },
+        "min_out": {
+          "source": "resolve_pendle_min_out",
+          "function_name": "swapExactYtForToken",
+          "slippage_bps": 50
+        }
+      },
+      "param_mapping": [
+        {
+          "name": "receiver",
+          "source": "arg",
+          "arg_key": "to",
+          "coerce": "address"
+        },
+        {
+          "name": "market",
+          "source": "arg",
+          "arg_key": "market",
+          "coerce": "address"
+        },
+        {
+          "name": "exactYtIn",
+          "source": "arg",
+          "arg_key": "amount",
+          "coerce": "uint256"
+        },
+        {
+          "name": "output",
+          "source": "struct",
+          "fields": [
+            {
+              "name": "tokenOut",
+              "source": "arg",
+              "arg_key": "asset_out",
+              "coerce": "address"
+            },
+            {
+              "name": "minTokenOut",
+              "source": "arg",
+              "coerce": "uint256",
+              "arg_key": "min_out"
+            },
+            {
+              "name": "tokenRedeemSy",
+              "source": "arg",
+              "arg_key": "asset_out",
+              "coerce": "address"
+            },
+            {
+              "name": "pendleSwap",
+              "source": "constant",
+              "value": "0x0000000000000000000000000000000000000000",
+              "coerce": "address"
+            },
+            {
+              "name": "swapData",
+              "source": "struct",
+              "fields": [
+                {
+                  "name": "swapType",
+                  "source": "constant",
+                  "value": 0,
+                  "coerce": "uint256"
+                },
+                {
+                  "name": "extRouter",
+                  "source": "constant",
+                  "value": "0x0000000000000000000000000000000000000000",
+                  "coerce": "address"
+                },
+                {
+                  "name": "extCalldata",
+                  "source": "constant",
+                  "value": "0x",
+                  "coerce": "bytes"
+                },
+                {
+                  "name": "needScale",
+                  "source": "constant",
+                  "value": false,
+                  "coerce": "bool"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "limit",
+          "source": "struct",
+          "fields": [
+            {
+              "name": "limitRouter",
+              "source": "constant",
+              "value": "0x0000000000000000000000000000000000000000",
+              "coerce": "address"
+            },
+            {
+              "name": "epsSkipMarket",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "normalFills",
+              "source": "constant",
+              "value": [],
+              "coerce": "tuple[]"
+            },
+            {
+              "name": "flashFills",
+              "source": "constant",
+              "value": [],
+              "coerce": "tuple[]"
+            },
+            {
+              "name": "optData",
+              "source": "constant",
+              "value": "0x",
+              "coerce": "bytes"
+            }
+          ]
+        }
+      ],
+      "approvals": [
+        {
+          "token": "$_pendle_yt",
+          "spender": "target_contract"
+        }
+      ]
+    },
+    "pendle_add_liquidity": {
+      "description": "Add liquidity to a Pendle market using a single ERC-20 token",
+      "target_contract": "router",
+      "function_name": "addLiquiditySingleToken",
+      "function_selector": "0x12599ac6",
+      "abi_source": "etherscan_cache",
+      "value_logic": {
+        "type": "zero"
+      },
+      "approvals": [
+        {
+          "token": "$asset",
+          "spender": "target_contract"
+        }
+      ],
+      "required_payload_args": [
+        "to",
+        "market",
+        "asset",
+        "amount",
+        "min_out",
+        "human_readable_amount"
+      ],
+      "payload_args": {
+        "to": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "to",
+          "context_field": "from_address"
+        },
+        "market": {
+          "source": "resolve_pendle_market",
+          "llm_field": "market",
+          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address — auto-resolves to the active Pendle market"
+        },
+        "asset": {
+          "source": "resolve_token_address",
+          "llm_field": "asset",
+          "description": "Token to spend — name (e.g. \"USDC\") or address"
+        },
+        "amount": {
+          "source": "resolve_amount_or_balance",
+          "llm_field": "amount",
+          "fallback_llm_fields": [
+            "amount"
+          ],
+          "decimals_from": "$asset",
+          "balance_of": "$asset",
+          "description": "Human-readable amount (e.g. \"1\", \"100\", \"max\")"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "Add {amount} {asset} as liquidity to Pendle market"
+        },
+        "slippage": {
+          "source": "llm_passthrough",
+          "llm_field": "slippage",
+          "optional": true,
+          "description": "Slippage tolerance in percent (e.g. \"1\" for 1%). Default: 0.5%"
+        },
+        "min_out": {
+          "source": "resolve_pendle_min_out",
+          "function_name": "addLiquiditySingleToken",
+          "slippage_bps": 50
+        }
+      },
+      "param_mapping": [
+        {
+          "name": "receiver",
+          "source": "arg",
+          "arg_key": "to",
+          "coerce": "address"
+        },
+        {
+          "name": "market",
+          "source": "arg",
+          "arg_key": "market",
+          "coerce": "address"
+        },
+        {
+          "name": "minLpOut",
+          "source": "arg",
+          "coerce": "uint256",
+          "arg_key": "min_out"
+        },
+        {
+          "name": "guessPtReceivedFromSy",
+          "source": "struct",
+          "fields": [
+            {
+              "name": "guessMin",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "guessMax",
+              "source": "constant",
+              "value": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+              "coerce": "uint256"
+            },
+            {
+              "name": "guessOffchain",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "maxIteration",
+              "source": "constant",
+              "value": 256,
+              "coerce": "uint256"
+            },
+            {
+              "name": "eps",
+              "source": "constant",
+              "value": "100000000000000",
+              "coerce": "uint256"
+            }
+          ]
+        },
+        {
+          "name": "input",
+          "source": "struct",
+          "fields": [
+            {
+              "name": "tokenIn",
+              "source": "arg",
+              "arg_key": "asset",
+              "coerce": "address"
+            },
+            {
+              "name": "netTokenIn",
+              "source": "arg",
+              "arg_key": "amount",
+              "coerce": "uint256"
+            },
+            {
+              "name": "tokenMintSy",
+              "source": "arg",
+              "arg_key": "asset",
+              "coerce": "address"
+            },
+            {
+              "name": "pendleSwap",
+              "source": "constant",
+              "value": "0x0000000000000000000000000000000000000000",
+              "coerce": "address"
+            },
+            {
+              "name": "swapData",
+              "source": "struct",
+              "fields": [
+                {
+                  "name": "swapType",
+                  "source": "constant",
+                  "value": 0,
+                  "coerce": "uint256"
+                },
+                {
+                  "name": "extRouter",
+                  "source": "constant",
+                  "value": "0x0000000000000000000000000000000000000000",
+                  "coerce": "address"
+                },
+                {
+                  "name": "extCalldata",
+                  "source": "constant",
+                  "value": "0x",
+                  "coerce": "bytes"
+                },
+                {
+                  "name": "needScale",
+                  "source": "constant",
+                  "value": false,
+                  "coerce": "bool"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "limit",
+          "source": "struct",
+          "fields": [
+            {
+              "name": "limitRouter",
+              "source": "constant",
+              "value": "0x0000000000000000000000000000000000000000",
+              "coerce": "address"
+            },
+            {
+              "name": "epsSkipMarket",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "normalFills",
+              "source": "constant",
+              "value": [],
+              "coerce": "tuple[]"
+            },
+            {
+              "name": "flashFills",
+              "source": "constant",
+              "value": [],
+              "coerce": "tuple[]"
+            },
+            {
+              "name": "optData",
+              "source": "constant",
+              "value": "0x",
+              "coerce": "bytes"
+            }
+          ]
+        }
+      ]
+    },
+    "pendle_remove_liquidity": {
+      "description": "Remove liquidity from a Pendle market and receive a single ERC-20 token",
+      "target_contract": "router",
+      "function_name": "removeLiquiditySingleToken",
+      "function_selector": "0x60da0860",
+      "abi_source": "etherscan_cache",
+      "value_logic": {
+        "type": "zero"
+      },
+      "required_payload_args": [
+        "to",
+        "market",
+        "asset_out",
+        "amount",
+        "min_out",
+        "human_readable_amount"
+      ],
+      "payload_args": {
+        "to": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "to",
+          "context_field": "from_address"
+        },
+        "market": {
+          "source": "resolve_pendle_market",
+          "llm_field": "market",
+          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address — auto-resolves to the active Pendle market"
+        },
+        "asset_out": {
+          "source": "resolve_token_address",
+          "llm_field": "asset_out",
+          "description": "Token to receive — name (e.g. \"wstETH\") or address"
+        },
+        "amount": {
+          "source": "resolve_amount_or_balance",
+          "llm_field": "amount",
+          "fallback_llm_fields": [
+            "amount"
+          ],
+          "decimals_from": "$asset_out",
+          "balance_of": "$market",
+          "description": "Human-readable amount (e.g. \"1\", \"100\", \"max\")"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "Remove {amount} LP from Pendle market for {asset_out}"
+        },
+        "slippage": {
+          "source": "llm_passthrough",
+          "llm_field": "slippage",
+          "optional": true,
+          "description": "Slippage tolerance in percent (e.g. \"1\" for 1%). Default: 0.5%"
+        },
+        "min_out": {
+          "source": "resolve_pendle_min_out",
+          "function_name": "removeLiquiditySingleToken",
+          "slippage_bps": 50
+        }
+      },
+      "param_mapping": [
+        {
+          "name": "receiver",
+          "source": "arg",
+          "arg_key": "to",
+          "coerce": "address"
+        },
+        {
+          "name": "market",
+          "source": "arg",
+          "arg_key": "market",
+          "coerce": "address"
+        },
+        {
+          "name": "netLpToRemove",
+          "source": "arg",
+          "arg_key": "amount",
+          "coerce": "uint256"
+        },
+        {
+          "name": "output",
+          "source": "struct",
+          "fields": [
+            {
+              "name": "tokenOut",
+              "source": "arg",
+              "arg_key": "asset_out",
+              "coerce": "address"
+            },
+            {
+              "name": "minTokenOut",
+              "source": "arg",
+              "coerce": "uint256",
+              "arg_key": "min_out"
+            },
+            {
+              "name": "tokenRedeemSy",
+              "source": "arg",
+              "arg_key": "asset_out",
+              "coerce": "address"
+            },
+            {
+              "name": "pendleSwap",
+              "source": "constant",
+              "value": "0x0000000000000000000000000000000000000000",
+              "coerce": "address"
+            },
+            {
+              "name": "swapData",
+              "source": "struct",
+              "fields": [
+                {
+                  "name": "swapType",
+                  "source": "constant",
+                  "value": 0,
+                  "coerce": "uint256"
+                },
+                {
+                  "name": "extRouter",
+                  "source": "constant",
+                  "value": "0x0000000000000000000000000000000000000000",
+                  "coerce": "address"
+                },
+                {
+                  "name": "extCalldata",
+                  "source": "constant",
+                  "value": "0x",
+                  "coerce": "bytes"
+                },
+                {
+                  "name": "needScale",
+                  "source": "constant",
+                  "value": false,
+                  "coerce": "bool"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "limit",
+          "source": "struct",
+          "fields": [
+            {
+              "name": "limitRouter",
+              "source": "constant",
+              "value": "0x0000000000000000000000000000000000000000",
+              "coerce": "address"
+            },
+            {
+              "name": "epsSkipMarket",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "normalFills",
+              "source": "constant",
+              "value": [],
+              "coerce": "tuple[]"
+            },
+            {
+              "name": "flashFills",
+              "source": "constant",
+              "value": [],
+              "coerce": "tuple[]"
+            },
+            {
+              "name": "optData",
+              "source": "constant",
+              "value": "0x",
+              "coerce": "bytes"
+            }
+          ]
+        }
+      ],
+      "approvals": [
+        {
+          "token": "$market",
+          "spender": "target_contract"
+        }
+      ]
+    },
+    "pendle_mint_py": {
+      "description": "Mint Principal Token (PT) and Yield Token (YT) from an ERC-20 token",
+      "target_contract": "router",
+      "function_name": "mintPyFromToken",
+      "function_selector": "0xd0f42385",
+      "abi_source": "etherscan_cache",
+      "value_logic": {
+        "type": "zero"
+      },
+      "approvals": [
+        {
+          "token": "$asset",
+          "spender": "target_contract"
+        }
+      ],
+      "required_payload_args": [
+        "to",
+        "market",
+        "yt_address",
+        "asset",
+        "amount",
+        "min_out",
+        "human_readable_amount"
+      ],
+      "payload_args": {
+        "to": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "to",
+          "context_field": "from_address"
+        },
+        "market": {
+          "source": "resolve_pendle_market",
+          "llm_field": "market",
+          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address — auto-resolves to the active Pendle market"
+        },
+        "yt_address": {
+          "source": "resolve_pendle_yt",
+          "llm_field": "yt_address",
+          "optional": true
+        },
+        "asset": {
+          "source": "resolve_token_address",
+          "llm_field": "asset",
+          "description": "Token to spend — name (e.g. \"USDC\") or address"
+        },
+        "amount": {
+          "source": "resolve_amount_or_balance",
+          "llm_field": "amount",
+          "fallback_llm_fields": [
+            "amount"
+          ],
+          "decimals_from": "$asset",
+          "balance_of": "$asset",
+          "description": "Human-readable amount (e.g. \"1\", \"100\", \"max\")"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "Mint PT+YT from {amount} {asset} on Pendle"
+        },
+        "slippage": {
+          "source": "llm_passthrough",
+          "llm_field": "slippage",
+          "optional": true,
+          "description": "Slippage tolerance in percent (e.g. \"1\" for 1%). Default: 0.5%"
+        },
+        "min_out": {
+          "source": "resolve_pendle_min_out",
+          "function_name": "mintPyFromToken",
+          "slippage_bps": 50
+        }
+      },
+      "param_mapping": [
+        {
+          "name": "receiver",
+          "source": "arg",
+          "arg_key": "to",
+          "coerce": "address"
+        },
+        {
+          "name": "YT",
+          "source": "arg",
+          "arg_key": "yt_address",
+          "coerce": "address"
+        },
+        {
+          "name": "minPyOut",
+          "source": "arg",
+          "coerce": "uint256",
+          "arg_key": "min_out"
+        },
+        {
+          "name": "input",
+          "source": "struct",
+          "fields": [
+            {
+              "name": "tokenIn",
+              "source": "arg",
+              "arg_key": "asset",
+              "coerce": "address"
+            },
+            {
+              "name": "netTokenIn",
+              "source": "arg",
+              "arg_key": "amount",
+              "coerce": "uint256"
+            },
+            {
+              "name": "tokenMintSy",
+              "source": "arg",
+              "arg_key": "asset",
+              "coerce": "address"
+            },
+            {
+              "name": "pendleSwap",
+              "source": "constant",
+              "value": "0x0000000000000000000000000000000000000000",
+              "coerce": "address"
+            },
+            {
+              "name": "swapData",
+              "source": "struct",
+              "fields": [
+                {
+                  "name": "swapType",
+                  "source": "constant",
+                  "value": 0,
+                  "coerce": "uint256"
+                },
+                {
+                  "name": "extRouter",
+                  "source": "constant",
+                  "value": "0x0000000000000000000000000000000000000000",
+                  "coerce": "address"
+                },
+                {
+                  "name": "extCalldata",
+                  "source": "constant",
+                  "value": "0x",
+                  "coerce": "bytes"
+                },
+                {
+                  "name": "needScale",
+                  "source": "constant",
+                  "value": false,
+                  "coerce": "bool"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "pendle_redeem_py": {
+      "description": "Redeem Principal Token (PT) and Yield Token (YT) for an ERC-20 token",
+      "target_contract": "router",
+      "function_name": "redeemPyToToken",
+      "function_selector": "0x47f1de22",
+      "abi_source": "etherscan_cache",
+      "value_logic": {
+        "type": "zero"
+      },
+      "required_payload_args": [
+        "to",
+        "market",
+        "yt_address",
+        "asset_out",
+        "amount",
+        "min_out",
+        "human_readable_amount"
+      ],
+      "payload_args": {
+        "to": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "to",
+          "context_field": "from_address"
+        },
+        "market": {
+          "source": "resolve_pendle_market",
+          "llm_field": "market",
+          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address — auto-resolves to the active Pendle market"
+        },
+        "yt_address": {
+          "source": "resolve_pendle_yt",
+          "llm_field": "yt_address",
+          "optional": true
+        },
+        "asset_out": {
+          "source": "resolve_token_address",
+          "llm_field": "asset_out",
+          "description": "Token to receive — name (e.g. \"wstETH\") or address"
+        },
+        "amount": {
+          "source": "resolve_amount",
+          "llm_field": "amount",
+          "fallback_llm_fields": [
+            "amount"
+          ],
+          "decimals_from": "$asset_out",
+          "description": "Human-readable amount (e.g. \"1\", \"100\", \"max\")"
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "Redeem {amount} PT+YT for {asset_out} on Pendle"
+        },
+        "slippage": {
+          "source": "llm_passthrough",
+          "llm_field": "slippage",
+          "optional": true,
+          "description": "Slippage tolerance in percent (e.g. \"1\" for 1%). Default: 0.5%"
+        },
+        "min_out": {
+          "source": "resolve_pendle_min_out",
+          "function_name": "redeemPyToToken",
+          "slippage_bps": 50
+        }
+      },
+      "param_mapping": [
+        {
+          "name": "receiver",
+          "source": "arg",
+          "arg_key": "to",
+          "coerce": "address"
+        },
+        {
+          "name": "YT",
+          "source": "arg",
+          "arg_key": "yt_address",
+          "coerce": "address"
+        },
+        {
+          "name": "netPyIn",
+          "source": "arg",
+          "arg_key": "amount",
+          "coerce": "uint256"
+        },
+        {
+          "name": "output",
+          "source": "struct",
+          "fields": [
+            {
+              "name": "tokenOut",
+              "source": "arg",
+              "arg_key": "asset_out",
+              "coerce": "address"
+            },
+            {
+              "name": "minTokenOut",
+              "source": "arg",
+              "coerce": "uint256",
+              "arg_key": "min_out"
+            },
+            {
+              "name": "tokenRedeemSy",
+              "source": "arg",
+              "arg_key": "asset_out",
+              "coerce": "address"
+            },
+            {
+              "name": "pendleSwap",
+              "source": "constant",
+              "value": "0x0000000000000000000000000000000000000000",
+              "coerce": "address"
+            },
+            {
+              "name": "swapData",
+              "source": "struct",
+              "fields": [
+                {
+                  "name": "swapType",
+                  "source": "constant",
+                  "value": 0,
+                  "coerce": "uint256"
+                },
+                {
+                  "name": "extRouter",
+                  "source": "constant",
+                  "value": "0x0000000000000000000000000000000000000000",
+                  "coerce": "address"
+                },
+                {
+                  "name": "extCalldata",
+                  "source": "constant",
+                  "value": "0x",
+                  "coerce": "bytes"
+                },
+                {
+                  "name": "needScale",
+                  "source": "constant",
+                  "value": false,
+                  "coerce": "bool"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "approvals": [
+        {
+          "token": "$_pendle_pt",
+          "spender": "target_contract"
+        },
+        {
+          "token": "$yt_address",
+          "spender": "target_contract"
+        }
+      ]
+    },
+    "pendle_claim_rewards": {
+      "description": "Claim accrued interest and rewards from Pendle positions",
+      "target_contract": "router",
+      "function_name": "redeemDueInterestAndRewards",
+      "function_selector": "0xf7e375e8",
+      "abi_source": "etherscan_cache",
+      "value_logic": {
+        "type": "zero"
+      },
+      "required_payload_args": [
+        "user",
+        "sys",
+        "yts",
+        "markets",
+        "human_readable_amount"
+      ],
+      "payload_args": {
+        "user": {
+          "source": "resolve_ens_or_hex",
+          "llm_field": "user",
+          "context_field": "from_address"
+        },
+        "sys": {
+          "source": "llm_passthrough",
+          "llm_field": "sys",
+          "fallback_llm_fields": [
+            "sy_addresses"
+          ]
+        },
+        "yts": {
+          "source": "llm_passthrough",
+          "llm_field": "yts",
+          "fallback_llm_fields": [
+            "yt_addresses"
+          ]
+        },
+        "markets": {
+          "source": "llm_passthrough",
+          "llm_field": "markets",
+          "fallback_llm_fields": [
+            "market_addresses"
+          ]
+        },
+        "human_readable_amount": {
+          "source": "compute_human_readable",
+          "template": "Claim Pendle interest and rewards"
+        }
+      },
+      "param_mapping": [
+        {
+          "name": "user",
+          "source": "arg",
+          "arg_key": "user",
+          "coerce": "address"
+        },
+        {
+          "name": "sys",
+          "source": "arg",
+          "arg_key": "sys",
+          "coerce": "address_array"
+        },
+        {
+          "name": "yts",
+          "source": "arg",
+          "arg_key": "yts",
+          "coerce": "address_array"
+        },
+        {
+          "name": "markets",
+          "source": "arg",
+          "arg_key": "markets",
+          "coerce": "address_array"
+        }
+      ]
+    }
+  }
+}
