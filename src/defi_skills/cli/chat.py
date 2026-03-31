@@ -192,7 +192,7 @@ Always call action_info before build_transaction. The call is instant (local loo
 
 ## Presenting Results
 - After building: summarize what was built (action, tokens, amounts, number of transactions).
-- Show raw transaction JSON only when the user asks for it.
+- The transaction payloads (to, value, data) are printed automatically by the CLI. Do not repeat them.
 - Be concise. Do not repeat information the user already knows.
 
 ## Supported Actions
@@ -272,6 +272,9 @@ def execute_tool(name, arguments, engine, chat_state):
     if name == "build_transaction":
         action = arguments.get("action", "")
         args = arguments.get("args", {})
+        if not args:
+            # Fallback: some models flatten args to top level instead of nesting
+            args = {k: v for k, v in arguments.items() if k != "action"}
         return build_tx(engine, action, args, chat_state["wallet_addr"], 1)
 
     if name == "simulate":
@@ -587,6 +590,17 @@ def run_chat(engine, wallet_addr, _chain_id=1, model="claude-sonnet-4-6", stream
                     console.print(f"  [success]\u2713[/success] [dim]{summary}[/dim]")
                 else:
                     console.print(f"  [error]\u2717[/error] [dim]{summary}[/dim]")
+
+                # Print full transaction payloads for build results
+                if fn_name == "build_transaction" and result.get("success"):
+                    for i, tx in enumerate(result.get("transactions", []), 1):
+                        raw = tx.get("raw_tx", {})
+                        tx_type = tx.get("type", "action")
+                        label = "Approval" if tx_type == "approval" else tx.get("action", "Action")
+                        console.print(f"\n  [bold]Tx {i}: {label}[/bold]")
+                        console.print(f"  [cyan]to:[/cyan]    {raw.get('to', '')}")
+                        console.print(f"  [cyan]value:[/cyan] {raw.get('value', '0')}")
+                        console.print(f"  [cyan]data:[/cyan]  {raw.get('data', '0x')}")
 
                 messages.append({
                     "role": "tool",
