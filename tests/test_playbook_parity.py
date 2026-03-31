@@ -44,6 +44,11 @@ CURVE_MINTER = "0xd061D61a4d941c39E5453435B6345Dc261C2fcE0"
 AAVE_REWARDS = "0x8164Cc65827dcFe994AB23944CBC90e0aa80BfcB"
 CURVE_3POOL_GAUGE = "0xbFcF63294aD7105dEa65aA58F8AE5BE2D9d0952A"
 CURVE_3POOL_LP = "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"
+PENDLE_ROUTER = "0x888888888889758F76e7103c6CbF23ABbF58F946"
+PENDLE_MARKET = "0x34280882267ffa6383B363E278B027Be083bBe3b"
+PENDLE_PT = "0xb253Eff1104802b97aC7E3aC9FdD73AecE295a2c"
+PENDLE_YT = "0x04B7Fa1e727d7290D6E24fA9b426d0c940283a95"
+PENDLE_SY = "0xcbC72d92b2dc8187414F6734718563898740C0bc"
 STETH_STRATEGY = "0x93c4b944D05dfe6df7645A86cd2206016c51564D"
 MOCK_OPERATOR = "0x1234567890ABCDeF1234567890aBcDEF12345678"
 MOCK_ATOKEN_USDC = "0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c"
@@ -144,6 +149,40 @@ def mock_urlopen(*args, **kwargs):
         "data": {"pools": [{"id": pool_id}]}
     }).encode("utf-8")
     return mock_resp
+
+
+def mock_pendle_requests(method, url, **kwargs):
+    """Mock Pendle API responses for market lookup and quoting."""
+    resp = MagicMock()
+    resp.status_code = 200
+    resp.raise_for_status = MagicMock()
+
+    if "/markets/active" in url:
+        resp.json.return_value = {"markets": [{
+            "name": "wstETH",
+            "address": PENDLE_MARKET,
+            "expiry": "2027-12-30T00:00:00.000Z",
+            "pt": PENDLE_PT,
+            "yt": PENDLE_YT,
+            "sy": PENDLE_SY,
+            "underlyingAsset": WETH_ADDR,
+        }]}
+    elif "/swapping-prices" in url:
+        resp.json.return_value = {
+            "underlyingTokenToPtRate": 1.2794624883868102,
+            "ptToUnderlyingTokenRate": 0.7797912761860166,
+            "underlyingTokenToYtRate": 27.321362785428178,
+            "ytToUnderlyingTokenRate": 0.031144093200593925,
+        }
+    elif "/convert" in url:
+        resp.json.return_value = {
+            "action": "mint-py",
+            "routes": [{"outputs": [{"token": PENDLE_PT, "amount": "12305739723467591"}]}],
+        }
+    else:
+        resp.json.return_value = {}
+
+    return resp
 
 
 # Test cases
@@ -458,6 +497,70 @@ TEST_CASES = [
          "selector": "0x8bdb3913"},
         id="balancer_exit_pool",
     ),
+    # ── Pendle V2 ──
+    pytest.param(
+        {"action": "pendle_swap_token_for_pt", "arguments": {"asset": "WETH", "amount": "1", "market": "wstETH"}},
+        {"action": "pendle_swap_token_for_pt", "function_name": "swapExactTokenForPt",
+         "target_contract": PENDLE_ROUTER, "selector": "0xc81f847a",
+         "args": {"asset": WETH_ADDR, "amount": "1000000000000000000", "market": PENDLE_MARKET}},
+        id="pendle_swap_token_for_pt",
+    ),
+    pytest.param(
+        {"action": "pendle_swap_pt_for_token", "arguments": {"asset_out": "WETH", "amount": "1", "market": "wstETH"}},
+        {"action": "pendle_swap_pt_for_token", "function_name": "swapExactPtForToken",
+         "target_contract": PENDLE_ROUTER, "selector": "0x594a88cc",
+         "args": {"asset_out": WETH_ADDR, "market": PENDLE_MARKET}},
+        id="pendle_swap_pt_for_token",
+    ),
+    pytest.param(
+        {"action": "pendle_swap_token_for_yt", "arguments": {"asset": "WETH", "amount": "1", "market": "wstETH"}},
+        {"action": "pendle_swap_token_for_yt", "function_name": "swapExactTokenForYt",
+         "target_contract": PENDLE_ROUTER, "selector": "0xed48907e",
+         "args": {"asset": WETH_ADDR, "market": PENDLE_MARKET}},
+        id="pendle_swap_token_for_yt",
+    ),
+    pytest.param(
+        {"action": "pendle_swap_yt_for_token", "arguments": {"asset_out": "WETH", "amount": "1", "market": "wstETH"}},
+        {"action": "pendle_swap_yt_for_token", "function_name": "swapExactYtForToken",
+         "target_contract": PENDLE_ROUTER, "selector": "0x05eb5327",
+         "args": {"asset_out": WETH_ADDR, "market": PENDLE_MARKET}},
+        id="pendle_swap_yt_for_token",
+    ),
+    pytest.param(
+        {"action": "pendle_add_liquidity", "arguments": {"asset": "WETH", "amount": "1", "market": "wstETH"}},
+        {"action": "pendle_add_liquidity", "function_name": "addLiquiditySingleToken",
+         "target_contract": PENDLE_ROUTER, "selector": "0x12599ac6",
+         "args": {"asset": WETH_ADDR, "market": PENDLE_MARKET}},
+        id="pendle_add_liquidity",
+    ),
+    pytest.param(
+        {"action": "pendle_remove_liquidity", "arguments": {"asset_out": "WETH", "amount": "1", "market": "wstETH"}},
+        {"action": "pendle_remove_liquidity", "function_name": "removeLiquiditySingleToken",
+         "target_contract": PENDLE_ROUTER, "selector": "0x60da0860",
+         "args": {"asset_out": WETH_ADDR, "market": PENDLE_MARKET}},
+        id="pendle_remove_liquidity",
+    ),
+    pytest.param(
+        {"action": "pendle_mint_py", "arguments": {"asset": "WETH", "amount": "1", "market": "wstETH"}},
+        {"action": "pendle_mint_py", "function_name": "mintPyFromToken",
+         "target_contract": PENDLE_ROUTER, "selector": "0xd0f42385",
+         "args": {"asset": WETH_ADDR, "yt_address": PENDLE_YT, "market": PENDLE_MARKET}},
+        id="pendle_mint_py",
+    ),
+    pytest.param(
+        {"action": "pendle_redeem_py", "arguments": {"asset_out": "WETH", "amount": "1", "market": "wstETH"}},
+        {"action": "pendle_redeem_py", "function_name": "redeemPyToToken",
+         "target_contract": PENDLE_ROUTER, "selector": "0x47f1de22",
+         "args": {"asset_out": WETH_ADDR, "yt_address": PENDLE_YT, "market": PENDLE_MARKET}},
+        id="pendle_redeem_py",
+    ),
+    pytest.param(
+        {"action": "pendle_claim_rewards", "arguments": {
+            "sys": [PENDLE_SY], "yts": [PENDLE_YT], "markets": [PENDLE_MARKET]}},
+        {"action": "pendle_claim_rewards", "function_name": "redeemDueInterestAndRewards",
+         "target_contract": PENDLE_ROUTER, "selector": "0xf7e375e8"},
+        id="pendle_claim_rewards",
+    ),
     # ── Error cases ──
     pytest.param(
         {"action": "nonexistent_action", "arguments": {"foo": "bar"}},
@@ -480,6 +583,8 @@ def test_playbook_parity(engine, llm_output, expect):
          patch("defi_skills.engine.resolvers.core.time") as mock_time, \
          patch("defi_skills.engine.resolvers.common.raw_eth_call", side_effect=mock_raw_eth_call), \
          patch("defi_skills.engine.resolvers.balancer.urllib.request.urlopen", side_effect=mock_urlopen), \
+         patch("defi_skills.engine.resolvers.pendle.requests.get", side_effect=lambda url, **kw: mock_pendle_requests("GET", url, **kw)), \
+         patch("defi_skills.engine.resolvers.pendle.requests.post", side_effect=lambda url, **kw: mock_pendle_requests("POST", url, **kw)), \
          patch.dict("os.environ", {"THEGRAPH_API_KEY": "test-key"}):
         mock_time.time.return_value = FIXED_TIME
 

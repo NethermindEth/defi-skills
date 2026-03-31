@@ -1,8 +1,10 @@
 # defi-skills
 
+> **Beta**: This project is under active development.
+
 Translate natural language into unsigned DeFi transaction payloads. A data-driven playbook engine resolves human-readable parameters (token symbols, ENS names, decimal amounts) into ABI-encoded calldata, with zero protocol-specific code in the engine.
 
-**13 protocols. 53 actions. 55 parity tests. All driven by JSON playbooks.**
+**13 protocols. 53 actions. All driven by JSON playbooks.**
 
 ## Quick Start
 
