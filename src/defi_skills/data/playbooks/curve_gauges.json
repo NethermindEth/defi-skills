@@ -2,31 +2,38 @@
   "protocol": "curve_gauges",
   "version": "1.0",
   "chain_id": 1,
-
   "contracts": {
     "minter": {
       "address": "0xd061D61a4d941c39E5453435B6345Dc261C2fcE0",
       "abi_source": "etherscan_cache"
     }
   },
-
   "standard_abis": {
     "gauge_deposit": {
       "name": "deposit",
       "type": "function",
-      "inputs": [{ "name": "_value", "type": "uint256" }],
+      "inputs": [
+        {
+          "name": "_value",
+          "type": "uint256"
+        }
+      ],
       "outputs": [],
       "stateMutability": "nonpayable"
     },
     "gauge_withdraw": {
       "name": "withdraw",
       "type": "function",
-      "inputs": [{ "name": "_value", "type": "uint256" }],
+      "inputs": [
+        {
+          "name": "_value",
+          "type": "uint256"
+        }
+      ],
       "outputs": [],
       "stateMutability": "nonpayable"
     }
   },
-
   "actions": {
     "curve_gauge_deposit": {
       "description": "Deposit LP tokens into a Curve gauge for CRV rewards",
@@ -35,10 +42,21 @@
       "function_selector": "0xb6b55f25",
       "abi_source": "standard",
       "standard_abi_key": "gauge_deposit",
-      "value_logic": { "type": "zero" },
-      "approvals": [{ "token": "$__lp_token_address", "spender": "$gauge_address" }],
-      "required_payload_args": ["gauge_address", "__lp_token_address", "_value", "human_readable_amount"],
-
+      "value_logic": {
+        "type": "zero"
+      },
+      "approvals": [
+        {
+          "token": "$__lp_token_address",
+          "spender": "$gauge_address"
+        }
+      ],
+      "required_payload_args": [
+        "gauge_address",
+        "__lp_token_address",
+        "_value",
+        "human_readable_amount"
+      ],
       "payload_args": {
         "gauge_address": {
           "source": "resolve_ens_or_hex",
@@ -51,7 +69,9 @@
         "_value": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount",
-          "fallback_llm_fields": ["amount"],
+          "fallback_llm_fields": [
+            "amount"
+          ],
           "decimals_from": 18,
           "balance_of": "$__lp_token_address"
         },
@@ -60,12 +80,15 @@
           "template": "{amount} LP tokens"
         }
       },
-
       "param_mapping": [
-        { "name": "_value", "source": "arg", "arg_key": "_value", "coerce": "uint256" }
+        {
+          "name": "_value",
+          "source": "arg",
+          "arg_key": "_value",
+          "coerce": "uint256"
+        }
       ]
     },
-
     "curve_gauge_withdraw": {
       "description": "Withdraw LP tokens from a Curve gauge",
       "target_contract": "$gauge_address",
@@ -73,9 +96,14 @@
       "function_selector": "0x2e1a7d4d",
       "abi_source": "standard",
       "standard_abi_key": "gauge_withdraw",
-      "value_logic": { "type": "zero" },
-      "required_payload_args": ["gauge_address", "_value", "human_readable_amount"],
-
+      "value_logic": {
+        "type": "zero"
+      },
+      "required_payload_args": [
+        "gauge_address",
+        "_value",
+        "human_readable_amount"
+      ],
       "payload_args": {
         "gauge_address": {
           "source": "resolve_ens_or_hex",
@@ -84,7 +112,9 @@
         "_value": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount",
-          "fallback_llm_fields": ["amount"],
+          "fallback_llm_fields": [
+            "amount"
+          ],
           "decimals_from": 18,
           "balance_of": "$gauge_address"
         },
@@ -93,21 +123,28 @@
           "template": "{amount} LP tokens"
         }
       },
-
       "param_mapping": [
-        { "name": "_value", "source": "arg", "arg_key": "_value", "coerce": "uint256" }
+        {
+          "name": "_value",
+          "source": "arg",
+          "arg_key": "_value",
+          "coerce": "uint256"
+        }
       ]
     },
-
     "curve_mint_crv": {
       "description": "Mint (claim) CRV rewards from a Curve gauge",
       "target_contract": "minter",
       "function_name": "mint",
       "function_selector": "0x6a627842",
       "abi_source": "etherscan_cache",
-      "value_logic": { "type": "zero" },
-      "required_payload_args": ["gauge_addr", "human_readable_amount"],
-
+      "value_logic": {
+        "type": "zero"
+      },
+      "required_payload_args": [
+        "gauge_addr",
+        "human_readable_amount"
+      ],
       "payload_args": {
         "gauge_addr": {
           "source": "resolve_ens_or_hex",
@@ -118,9 +155,13 @@
           "template": "CRV rewards"
         }
       },
-
       "param_mapping": [
-        { "name": "gauge_addr", "source": "arg", "arg_key": "gauge_addr", "coerce": "address" }
+        {
+          "name": "gauge_addr",
+          "source": "arg",
+          "arg_key": "gauge_addr",
+          "coerce": "address"
+        }
       ]
     }
   }

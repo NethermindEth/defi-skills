@@ -2,14 +2,12 @@
   "protocol": "weth",
   "version": "1.0",
   "chain_id": 1,
-
   "contracts": {
     "weth": {
       "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
       "abi_source": "etherscan_cache"
     }
   },
-
   "actions": {
     "weth_wrap": {
       "description": "Wrap ETH into WETH (deposit)",
@@ -21,13 +19,17 @@
         "type": "from_arg",
         "source_arg": "value"
       },
-      "required_payload_args": ["value", "human_readable_amount"],
-
+      "required_payload_args": [
+        "value",
+        "human_readable_amount"
+      ],
       "payload_args": {
         "value": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount",
-          "fallback_llm_fields": ["value"],
+          "fallback_llm_fields": [
+            "value"
+          ],
           "decimals_from": "$native",
           "balance_of": "$native"
         },
@@ -36,24 +38,29 @@
           "template": "{amount} ETH"
         }
       },
-
       "param_mapping": []
     },
-
     "weth_unwrap": {
       "description": "Unwrap WETH back to ETH (withdraw)",
       "target_contract": "weth",
       "function_name": "withdraw",
       "function_selector": "0x2e1a7d4d",
       "abi_source": "etherscan_cache",
-      "value_logic": { "type": "zero" },
-      "required_payload_args": ["wad", "human_readable_amount"],
-
+      "value_logic": {
+        "type": "zero"
+      },
+      "required_payload_args": [
+        "wad",
+        "human_readable_amount"
+      ],
       "payload_args": {
         "wad": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount",
-          "fallback_llm_fields": ["wad", "amount"],
+          "fallback_llm_fields": [
+            "wad",
+            "amount"
+          ],
           "decimals_from": "$native",
           "balance_of": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
         },
@@ -62,9 +69,13 @@
           "template": "{amount} WETH"
         }
       },
-
       "param_mapping": [
-        { "name": "wad", "source": "arg", "arg_key": "wad", "coerce": "uint256" }
+        {
+          "name": "wad",
+          "source": "arg",
+          "arg_key": "wad",
+          "coerce": "uint256"
+        }
       ]
     }
   }

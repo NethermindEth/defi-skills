@@ -2,7 +2,6 @@
   "protocol": "uniswap_v3",
   "version": "1.0",
   "chain_id": 1,
-
   "contracts": {
     "router": {
       "address": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
@@ -13,7 +12,6 @@
       "abi_source": "etherscan_cache"
     }
   },
-
   "actions": {
     "uniswap_swap": {
       "description": "Swap tokens via Uniswap V3 single-hop (exactInputSingle)",
@@ -21,29 +19,61 @@
       "function_name": "exactInputSingle",
       "function_selector": "0x414bf389",
       "abi_source": "etherscan_cache",
-      "value_logic": { "type": "zero" },
-      "approvals": [{ "token": "$tokenIn", "spender": "target_contract" }],
-      "required_payload_args": ["tokenIn", "tokenOut", "fee", "recipient", "amountIn", "amountOutMinimum", "human_readable_amount"],
-
+      "value_logic": {
+        "type": "zero"
+      },
+      "approvals": [
+        {
+          "token": "$tokenIn",
+          "spender": "target_contract"
+        }
+      ],
+      "required_payload_args": [
+        "tokenIn",
+        "tokenOut",
+        "fee",
+        "recipient",
+        "amountIn",
+        "amountOutMinimum",
+        "human_readable_amount"
+      ],
       "payload_args": {
         "tokenIn": {
           "source": "resolve_token_address",
           "llm_field": "asset_in",
-          "fallback_llm_fields": ["path[0]"],
+          "fallback_llm_fields": [
+            "path[0]"
+          ],
           "eth_alias": "WETH"
         },
         "tokenOut": {
           "source": "resolve_token_address",
           "llm_field": "asset_out",
-          "fallback_llm_fields": ["path[-1]"],
+          "fallback_llm_fields": [
+            "path[-1]"
+          ],
           "eth_alias": "WETH"
         },
         "fee": {
           "source": "resolve_fee_tier",
           "llm_field": "fee",
           "fee_heuristic": {
-            "stable_tokens": ["USDC", "USDT", "DAI", "FRAX", "LUSD", "GHO", "crvUSD", "PYUSD", "USDe"],
-            "major_tokens": ["WETH", "ETH", "WBTC"],
+            "stable_tokens": [
+              "USDC",
+              "USDT",
+              "DAI",
+              "FRAX",
+              "LUSD",
+              "GHO",
+              "crvUSD",
+              "PYUSD",
+              "USDe"
+            ],
+            "major_tokens": [
+              "WETH",
+              "ETH",
+              "WBTC"
+            ],
             "stable_stable_fee": 100,
             "major_stable_fee": 500,
             "default_fee": 3000
@@ -63,7 +93,9 @@
         "amountIn": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount",
-          "fallback_llm_fields": ["amountIn"],
+          "fallback_llm_fields": [
+            "amountIn"
+          ],
           "decimals_from": "$tokenIn",
           "balance_of": "$tokenIn"
         },
@@ -86,38 +118,94 @@
           "template": "Swap {amount} ({asset_in} -> {asset_out})"
         }
       },
-
       "param_mapping": [
         {
           "name": "params",
           "source": "struct",
           "fields": [
-            { "name": "tokenIn",           "source": "arg", "arg_key": "tokenIn",           "coerce": "address" },
-            { "name": "tokenOut",          "source": "arg", "arg_key": "tokenOut",          "coerce": "address" },
-            { "name": "fee",               "source": "arg", "arg_key": "fee",               "coerce": "uint24" },
-            { "name": "recipient",         "source": "arg", "arg_key": "recipient",         "coerce": "address" },
-            { "name": "deadline",          "source": "arg", "arg_key": "deadline",          "coerce": "uint256" },
-            { "name": "amountIn",          "source": "arg", "arg_key": "amountIn",          "coerce": "uint256" },
-            { "name": "amountOutMinimum",  "source": "arg", "arg_key": "amountOutMinimum",  "coerce": "uint256" },
-            { "name": "sqrtPriceLimitX96", "source": "arg", "arg_key": "sqrtPriceLimitX96", "coerce": "uint160" }
+            {
+              "name": "tokenIn",
+              "source": "arg",
+              "arg_key": "tokenIn",
+              "coerce": "address"
+            },
+            {
+              "name": "tokenOut",
+              "source": "arg",
+              "arg_key": "tokenOut",
+              "coerce": "address"
+            },
+            {
+              "name": "fee",
+              "source": "arg",
+              "arg_key": "fee",
+              "coerce": "uint24"
+            },
+            {
+              "name": "recipient",
+              "source": "arg",
+              "arg_key": "recipient",
+              "coerce": "address"
+            },
+            {
+              "name": "deadline",
+              "source": "arg",
+              "arg_key": "deadline",
+              "coerce": "uint256"
+            },
+            {
+              "name": "amountIn",
+              "source": "arg",
+              "arg_key": "amountIn",
+              "coerce": "uint256"
+            },
+            {
+              "name": "amountOutMinimum",
+              "source": "arg",
+              "arg_key": "amountOutMinimum",
+              "coerce": "uint256"
+            },
+            {
+              "name": "sqrtPriceLimitX96",
+              "source": "arg",
+              "arg_key": "sqrtPriceLimitX96",
+              "coerce": "uint160"
+            }
           ]
         }
       ]
     },
-
     "uniswap_lp_mint": {
       "description": "Create a new Uniswap V3 LP position (full range by default)",
       "target_contract": "nfpm",
       "function_name": "mint",
       "function_selector": "0x88316456",
       "abi_source": "etherscan_cache",
-      "value_logic": { "type": "zero" },
+      "value_logic": {
+        "type": "zero"
+      },
       "approvals": [
-        { "token": "$__ordering.token0", "spender": "target_contract" },
-        { "token": "$__ordering.token1", "spender": "target_contract" }
+        {
+          "token": "$__ordering.token0",
+          "spender": "target_contract"
+        },
+        {
+          "token": "$__ordering.token1",
+          "spender": "target_contract"
+        }
       ],
-      "required_payload_args": ["__tokenA_address", "__tokenB_address", "fee", "__amountA", "__amountB", "__ordering", "__tick_range", "recipient", "deadline", "human_readable_amount"],
-
+      "required_payload_args": [
+        "__tokenA_address",
+        "__tokenB_address",
+        "fee",
+        "__amountA",
+        "__amountB",
+        "__ordering",
+        "__tick_range",
+        "recipient",
+        "deadline",
+        "human_readable_amount"
+      ],
       "payload_args": {
         "__tokenA_address": {
           "source": "resolve_token_address",
@@ -133,8 +221,22 @@
           "source": "resolve_fee_tier",
           "llm_field": "fee",
           "fee_heuristic": {
-            "stable_tokens": ["USDC", "USDT", "DAI", "FRAX", "LUSD", "GHO", "crvUSD", "PYUSD", "USDe"],
-            "major_tokens": ["WETH", "ETH", "WBTC"],
+            "stable_tokens": [
+              "USDC",
+              "USDT",
+              "DAI",
+              "FRAX",
+              "LUSD",
+              "GHO",
+              "crvUSD",
+              "PYUSD",
+              "USDe"
+            ],
+            "major_tokens": [
+              "WETH",
+              "ETH",
+              "WBTC"
+            ],
             "stable_stable_fee": 100,
             "major_stable_fee": 500,
             "default_fee": 3000
@@ -145,7 +247,9 @@
         "__amountA": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount_a",
-          "fallback_llm_fields": ["amount"],
+          "fallback_llm_fields": [
+            "amount"
+          ],
           "decimals_from": "$asset_a",
           "balance_of": "$__tokenA_address"
         },
@@ -179,42 +283,103 @@
           "template": "LP {amount_a} {asset_a} + {amount_b} {asset_b}"
         }
       },
-
       "param_mapping": [
         {
           "name": "params",
           "source": "struct",
           "fields": [
-            { "name": "token0",         "source": "arg", "arg_key": "__ordering.token0",  "coerce": "address" },
-            { "name": "token1",         "source": "arg", "arg_key": "__ordering.token1",  "coerce": "address" },
-            { "name": "fee",            "source": "arg", "arg_key": "fee",                "coerce": "uint24" },
-            { "name": "tickLower",      "source": "arg", "arg_key": "__tick_range.tickLower", "coerce": "int24" },
-            { "name": "tickUpper",      "source": "arg", "arg_key": "__tick_range.tickUpper", "coerce": "int24" },
-            { "name": "amount0Desired", "source": "arg", "arg_key": "__ordering.amount0", "coerce": "uint256" },
-            { "name": "amount1Desired", "source": "arg", "arg_key": "__ordering.amount1", "coerce": "uint256" },
-            { "name": "amount0Min",     "source": "constant", "value": 0, "coerce": "uint256" },
-            { "name": "amount1Min",     "source": "constant", "value": 0, "coerce": "uint256" },
-            { "name": "recipient",      "source": "arg", "arg_key": "recipient", "coerce": "address" },
-            { "name": "deadline",       "source": "arg", "arg_key": "deadline",  "coerce": "uint256" }
+            {
+              "name": "token0",
+              "source": "arg",
+              "arg_key": "__ordering.token0",
+              "coerce": "address"
+            },
+            {
+              "name": "token1",
+              "source": "arg",
+              "arg_key": "__ordering.token1",
+              "coerce": "address"
+            },
+            {
+              "name": "fee",
+              "source": "arg",
+              "arg_key": "fee",
+              "coerce": "uint24"
+            },
+            {
+              "name": "tickLower",
+              "source": "arg",
+              "arg_key": "__tick_range.tickLower",
+              "coerce": "int24"
+            },
+            {
+              "name": "tickUpper",
+              "source": "arg",
+              "arg_key": "__tick_range.tickUpper",
+              "coerce": "int24"
+            },
+            {
+              "name": "amount0Desired",
+              "source": "arg",
+              "arg_key": "__ordering.amount0",
+              "coerce": "uint256"
+            },
+            {
+              "name": "amount1Desired",
+              "source": "arg",
+              "arg_key": "__ordering.amount1",
+              "coerce": "uint256"
+            },
+            {
+              "name": "amount0Min",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "amount1Min",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "recipient",
+              "source": "arg",
+              "arg_key": "recipient",
+              "coerce": "address"
+            },
+            {
+              "name": "deadline",
+              "source": "arg",
+              "arg_key": "deadline",
+              "coerce": "uint256"
+            }
           ]
         }
       ]
     },
-
     "uniswap_lp_collect": {
       "description": "Collect accumulated fees from a Uniswap V3 LP position",
       "target_contract": "nfpm",
       "function_name": "collect",
       "function_selector": "0xfc6f7865",
       "abi_source": "etherscan_cache",
-      "value_logic": { "type": "zero" },
-      "required_payload_args": ["tokenId", "recipient", "human_readable_amount"],
-
+      "value_logic": {
+        "type": "zero"
+      },
+      "required_payload_args": [
+        "tokenId",
+        "recipient",
+        "human_readable_amount"
+      ],
       "payload_args": {
         "tokenId": {
           "source": "llm_passthrough",
           "llm_field": "token_id",
-          "fallback_llm_fields": ["tokenId", "position_id"]
+          "fallback_llm_fields": [
+            "tokenId",
+            "position_id"
+          ]
         },
         "recipient": {
           "source": "resolve_ens_or_hex",
@@ -226,46 +391,78 @@
           "template": "collect fees from position #{token_id}"
         }
       },
-
       "param_mapping": [
         {
           "name": "params",
           "source": "struct",
           "fields": [
-            { "name": "tokenId",   "source": "arg", "arg_key": "tokenId",   "coerce": "uint256" },
-            { "name": "recipient", "source": "arg", "arg_key": "recipient", "coerce": "address" },
-            { "name": "amount0Max", "source": "constant", "value": "340282366920938463463374607431768211455", "coerce": "uint128" },
-            { "name": "amount1Max", "source": "constant", "value": "340282366920938463463374607431768211455", "coerce": "uint128" }
+            {
+              "name": "tokenId",
+              "source": "arg",
+              "arg_key": "tokenId",
+              "coerce": "uint256"
+            },
+            {
+              "name": "recipient",
+              "source": "arg",
+              "arg_key": "recipient",
+              "coerce": "address"
+            },
+            {
+              "name": "amount0Max",
+              "source": "constant",
+              "value": "340282366920938463463374607431768211455",
+              "coerce": "uint128"
+            },
+            {
+              "name": "amount1Max",
+              "source": "constant",
+              "value": "340282366920938463463374607431768211455",
+              "coerce": "uint128"
+            }
           ]
         }
       ]
     },
-
     "uniswap_lp_decrease": {
       "description": "Remove liquidity from a Uniswap V3 LP position",
       "target_contract": "nfpm",
       "function_name": "decreaseLiquidity",
       "function_selector": "0x0c49ccbe",
       "abi_source": "etherscan_cache",
-      "value_logic": { "type": "zero" },
-      "required_payload_args": ["__position", "liquidity", "human_readable_amount"],
-
+      "value_logic": {
+        "type": "zero"
+      },
+      "required_payload_args": [
+        "__position",
+        "liquidity",
+        "human_readable_amount"
+      ],
       "payload_args": {
         "__position": {
           "source": "resolve_uniswap_position",
           "llm_field": "token_id",
-          "fallback_llm_fields": ["tokenId", "position_id"],
+          "fallback_llm_fields": [
+            "tokenId",
+            "position_id"
+          ],
           "nfpm_address": "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
         },
         "tokenId": {
           "source": "llm_passthrough",
           "llm_field": "token_id",
-          "fallback_llm_fields": ["tokenId", "position_id"]
+          "fallback_llm_fields": [
+            "tokenId",
+            "position_id"
+          ]
         },
         "liquidity": {
           "source": "resolve_partial_liquidity",
           "llm_field": "percentage",
-          "fallback_llm_fields": ["amount", "liquidity"]
+          "fallback_llm_fields": [
+            "amount",
+            "liquidity"
+          ]
         },
         "deadline": {
           "source": "resolve_deadline",
@@ -276,58 +473,106 @@
           "template": "remove liquidity from position #{token_id}"
         }
       },
-
       "param_mapping": [
         {
           "name": "params",
           "source": "struct",
           "fields": [
-            { "name": "tokenId",   "source": "arg", "arg_key": "tokenId",  "coerce": "uint256" },
-            { "name": "liquidity", "source": "arg", "arg_key": "liquidity", "coerce": "uint128" },
-            { "name": "amount0Min", "source": "constant", "value": 0, "coerce": "uint256" },
-            { "name": "amount1Min", "source": "constant", "value": 0, "coerce": "uint256" },
-            { "name": "deadline",   "source": "arg", "arg_key": "deadline", "coerce": "uint256" }
+            {
+              "name": "tokenId",
+              "source": "arg",
+              "arg_key": "tokenId",
+              "coerce": "uint256"
+            },
+            {
+              "name": "liquidity",
+              "source": "arg",
+              "arg_key": "liquidity",
+              "coerce": "uint128"
+            },
+            {
+              "name": "amount0Min",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "amount1Min",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "deadline",
+              "source": "arg",
+              "arg_key": "deadline",
+              "coerce": "uint256"
+            }
           ]
         }
       ]
     },
-
     "uniswap_lp_increase": {
       "description": "Add more liquidity to an existing Uniswap V3 LP position",
       "target_contract": "nfpm",
       "function_name": "increaseLiquidity",
       "function_selector": "0x219f5d17",
       "abi_source": "etherscan_cache",
-      "value_logic": { "type": "zero" },
+      "value_logic": {
+        "type": "zero"
+      },
       "approvals": [
-        { "token": "$__position.token0", "spender": "target_contract" },
-        { "token": "$__position.token1", "spender": "target_contract" }
+        {
+          "token": "$__position.token0",
+          "spender": "target_contract"
+        },
+        {
+          "token": "$__position.token1",
+          "spender": "target_contract"
+        }
       ],
-      "required_payload_args": ["__position", "tokenId", "amount0Desired", "amount1Desired", "deadline", "human_readable_amount"],
-
+      "required_payload_args": [
+        "__position",
+        "tokenId",
+        "amount0Desired",
+        "amount1Desired",
+        "deadline",
+        "human_readable_amount"
+      ],
       "payload_args": {
         "__position": {
           "source": "resolve_uniswap_position",
           "llm_field": "token_id",
-          "fallback_llm_fields": ["tokenId", "position_id"],
+          "fallback_llm_fields": [
+            "tokenId",
+            "position_id"
+          ],
           "nfpm_address": "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
         },
         "tokenId": {
           "source": "llm_passthrough",
           "llm_field": "token_id",
-          "fallback_llm_fields": ["tokenId", "position_id"]
+          "fallback_llm_fields": [
+            "tokenId",
+            "position_id"
+          ]
         },
         "amount0Desired": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount_a",
-          "fallback_llm_fields": ["amount", "amount0"],
+          "fallback_llm_fields": [
+            "amount",
+            "amount0"
+          ],
           "decimals_from": "$__position.token0",
           "balance_of": "$__position.token0"
         },
         "amount1Desired": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount_b",
-          "fallback_llm_fields": ["amount1"],
+          "fallback_llm_fields": [
+            "amount1"
+          ],
           "decimals_from": "$__position.token1",
           "balance_of": "$__position.token1"
         },
@@ -340,18 +585,47 @@
           "template": "add liquidity to position #{token_id}"
         }
       },
-
       "param_mapping": [
         {
           "name": "params",
           "source": "struct",
           "fields": [
-            { "name": "tokenId",        "source": "arg", "arg_key": "tokenId",        "coerce": "uint256" },
-            { "name": "amount0Desired",  "source": "arg", "arg_key": "amount0Desired", "coerce": "uint256" },
-            { "name": "amount1Desired",  "source": "arg", "arg_key": "amount1Desired", "coerce": "uint256" },
-            { "name": "amount0Min",      "source": "constant", "value": 0, "coerce": "uint256" },
-            { "name": "amount1Min",      "source": "constant", "value": 0, "coerce": "uint256" },
-            { "name": "deadline",        "source": "arg", "arg_key": "deadline", "coerce": "uint256" }
+            {
+              "name": "tokenId",
+              "source": "arg",
+              "arg_key": "tokenId",
+              "coerce": "uint256"
+            },
+            {
+              "name": "amount0Desired",
+              "source": "arg",
+              "arg_key": "amount0Desired",
+              "coerce": "uint256"
+            },
+            {
+              "name": "amount1Desired",
+              "source": "arg",
+              "arg_key": "amount1Desired",
+              "coerce": "uint256"
+            },
+            {
+              "name": "amount0Min",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "amount1Min",
+              "source": "constant",
+              "value": 0,
+              "coerce": "uint256"
+            },
+            {
+              "name": "deadline",
+              "source": "arg",
+              "arg_key": "deadline",
+              "coerce": "uint256"
+            }
           ]
         }
       ]

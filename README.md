@@ -2,7 +2,7 @@
 
 Translate natural language into unsigned DeFi transaction payloads. A data-driven playbook engine resolves human-readable parameters (token symbols, ENS names, decimal amounts) into ABI-encoded calldata, with zero protocol-specific code in the engine.
 
-**12 protocols. 44 actions. 55 parity tests. All driven by JSON playbooks.**
+**13 protocols. 53 actions. 55 parity tests. All driven by JSON playbooks.**
 
 ## Quick Start
 
@@ -74,27 +74,20 @@ This tool is built to be used by AI agents. It ships as a **skill** that any age
 
 The agent is the LLM. The CLI is the execution engine. No LLM runs inside the CLI in this flow.
 
-### Claude Code skill
+### Skill files
 
-A ready-made skill is included at `.claude/skills/intent-to-transaction/SKILL.md`. Once `defi-skills` is installed and `WALLET_ADDRESS` is set, Claude Code automatically picks it up. Users can invoke it naturally:
+Ready-made skill files are included for both Claude Code and OpenClaw:
+
+| Agent | Skill location |
+|-------|---------------|
+| Claude Code | `.claude/skills/intent-to-transaction/SKILL.md` |
+| OpenClaw / generic agents | `openClaw-Skill/SKILL.md` |
+
+Both contain the same instructions. Copy the appropriate file into your project and ensure `defi-skills` is installed with `WALLET_ADDRESS` set. The agent can then invoke it naturally:
 
 > "Supply 100 USDC to Aave"
 > "Swap 0.5 ETH for USDC on Uniswap"
-> "Stake 10 ETH on Lido, then restake on EigenLayer"
-
-Claude Code will call the CLI deterministically and return the unsigned transactions.
-
-### OpenClaw / generic agents
-
-The same skill definition lives at `skills/intent-to-transaction/SKILL.md` in the portable OpenClaw format. Any agent framework that reads skill manifests can use it. The skill declares its requirements:
-
-```yaml
-requires:
-  bins:
-    - defi-skills
-  env:
-    - WALLET_ADDRESS
-```
+> "Buy PT for wstETH on Pendle"
 
 The agent workflow is always: discover actions (`defi-skills actions --json`), check parameters (`defi-skills actions <name> --json`), build transaction (`defi-skills build --action <name> --args '{...}' --json`).
 
@@ -163,8 +156,11 @@ Resolvers are pure functions registered in `engine/resolvers/__init__.py`. Each 
 | `resolve_uniswap_quote` | On-chain QuoterV2 call for minimum output with slippage |
 | `resolve_balancer_pool_id` | The Graph query for Balancer pool lookup |
 | `resolve_interest_rate_mode` | "variable" (2) or reject deprecated "stable" (1) |
+| `resolve_pendle_market` | Pendle API lookup: token name ("wstETH") to active market address |
+| `resolve_pendle_min_out` | Pendle API quote (spot rates for swaps, convert API for mint/LP) with slippage |
+| `resolve_pendle_yt` | YT address from market context, auto-resolved from market lookup |
 
-Protocol-specific resolvers (EigenLayer strategies, Lido withdrawal requests, Curve pool math) live in their own files under `engine/resolvers/`.
+Protocol-specific resolvers (EigenLayer strategies, Lido withdrawal requests, Curve pool math, Pendle market/quote) live in their own files under `engine/resolvers/`.
 
 ### Approval Handling
 
@@ -230,6 +226,7 @@ On failure: `{"success": false, "error": "description"}`.
 | Rocket Pool | `rocketpool_stake`, `rocketpool_unstake` |
 | EigenLayer | `eigenlayer_deposit`, `eigenlayer_delegate`, `eigenlayer_undelegate`, `eigenlayer_queue_withdrawals`, `eigenlayer_complete_withdrawal` |
 | Balancer V2 | `balancer_swap`, `balancer_join_pool`, `balancer_exit_pool` |
+| Pendle V2 | `pendle_swap_token_for_pt`, `pendle_swap_pt_for_token`, `pendle_swap_token_for_yt`, `pendle_swap_yt_for_token`, `pendle_add_liquidity`, `pendle_remove_liquidity`, `pendle_mint_py`, `pendle_redeem_py`, `pendle_claim_rewards` |
 
 Run `defi-skills actions <name>` to see required/optional parameters for any action.
 
@@ -257,8 +254,9 @@ src/defi_skills/
       eigenlayer.py      # Strategy, deposit, withdrawal resolvers
       lido.py            # Withdrawal request, checkpoint resolvers
       aave.py            # Reward asset resolvers
+      pendle.py          # Market lookup, swap quote, YT address resolvers
   data/
-    playbooks/*.json     # Protocol definitions (12 files)
+    playbooks/*.json     # Protocol definitions (13 files)
     abi_cache/*.json     # Etherscan-verified ABIs
     cache/               # Token resolution cache (ENS is live-only)
     registry/            # Governance-mutable state (EigenLayer strategies, Compound tokens)
@@ -335,7 +333,24 @@ defi-skills config set alchemy_api_key "your-key"
 
 ## Adding a New Protocol
 
-The fastest path is the LLM-assisted playbook generator:
+### Option 1: Claude Code agent (recommended)
+
+A custom Claude Code agent handles the full workflow — research, ABI fetching, proxy detection, playbook generation, and validation:
+
+```
+@playbook-generator Add Morpho protocol
+```
+
+The agent at `.claude/agents/playbook-generator.md` will:
+1. Search the web for contract addresses and documentation
+2. Detect proxy patterns (Diamond/multi-facet) and fetch all facet ABIs
+3. Run `generate_playbook.py` with the right arguments
+4. Review the output and fix passthrough params, approvals, and struct defaults
+5. Validate against cached ABIs and run the test suite
+
+### Option 2: CLI script
+
+Run the playbook generator directly:
 
 ```bash
 python scripts/generate_playbook.py \
@@ -345,8 +360,18 @@ python scripts/generate_playbook.py \
   --model claude-sonnet-4-6
 ```
 
-This will:
-1. Fetch the verified ABI from Etherscan
+For Diamond/multi-facet proxies, use `--facets` to provide additional facet addresses:
+
+```bash
+python scripts/generate_playbook.py \
+  --protocol pendle \
+  --contracts router=0x888888888889758F76e7103c6CbF23ABbF58F946 \
+  --facets 0xd8D200d9... 0x4a03Ce0a... 0x373Dba20... \
+  --functions swapExactTokenForPt,addLiquiditySingleToken
+```
+
+The script will:
+1. Fetch the verified ABI from Etherscan (auto-detects standard EIP-2535 Diamond proxies)
 2. Filter user-facing write functions (skips admin/view/pure)
 3. Classify each parameter's semantic role via LLM (token address, amount, sender, constant, etc.)
 4. Assemble a complete playbook JSON with `payload_args` + `param_mapping`
@@ -355,7 +380,7 @@ This will:
 
 Review the generated JSON, fix any flagged items, and drop it into `src/defi_skills/data/playbooks/`. The engine picks it up automatically, no code changes needed.
 
-For protocols that need custom on-chain resolution (e.g., pool discovery, strategy lookups), add a resolver in `engine/resolvers/` and register it in `__init__.py`.
+For protocols that need custom on-chain resolution (e.g., pool discovery, strategy lookups, slippage quotes), add a resolver in `engine/resolvers/` and register it in `__init__.py`.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full walkthrough.
 

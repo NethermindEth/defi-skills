@@ -2,7 +2,6 @@
   "protocol": "lido",
   "version": "1.0",
   "chain_id": 1,
-
   "contracts": {
     "steth": {
       "address": "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
@@ -17,7 +16,6 @@
       "abi_source": "etherscan_cache"
     }
   },
-
   "actions": {
     "lido_stake": {
       "description": "Stake ETH for stETH via Lido",
@@ -29,13 +27,17 @@
         "type": "from_arg",
         "source_arg": "value"
       },
-      "required_payload_args": ["value", "human_readable_amount"],
-
+      "required_payload_args": [
+        "value",
+        "human_readable_amount"
+      ],
       "payload_args": {
         "value": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount",
-          "fallback_llm_fields": ["value"],
+          "fallback_llm_fields": [
+            "value"
+          ],
           "decimals_from": "$native",
           "balance_of": "$native"
         },
@@ -44,27 +46,41 @@
           "template": "{amount} ETH"
         }
       },
-
       "param_mapping": [
-        { "name": "_referral", "source": "constant", "value": "0x0000000000000000000000000000000000000000", "coerce": "address" }
+        {
+          "name": "_referral",
+          "source": "constant",
+          "value": "0x0000000000000000000000000000000000000000",
+          "coerce": "address"
+        }
       ]
     },
-
     "lido_wrap_steth": {
       "description": "Wrap stETH to wstETH (needed for Aave V3 collateral)",
       "target_contract": "wsteth",
       "function_name": "wrap",
       "function_selector": "0xea598cb0",
       "abi_source": "etherscan_cache",
-      "value_logic": { "type": "zero" },
-      "approvals": [{ "token": "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84", "spender": "target_contract" }],
-      "required_payload_args": ["_stETHAmount", "human_readable_amount"],
-
+      "value_logic": {
+        "type": "zero"
+      },
+      "approvals": [
+        {
+          "token": "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+          "spender": "target_contract"
+        }
+      ],
+      "required_payload_args": [
+        "_stETHAmount",
+        "human_readable_amount"
+      ],
       "payload_args": {
         "_stETHAmount": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount",
-          "fallback_llm_fields": ["amount"],
+          "fallback_llm_fields": [
+            "amount"
+          ],
           "decimals_from": "$native",
           "balance_of": "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
         },
@@ -73,26 +89,35 @@
           "template": "{amount} stETH → wstETH"
         }
       },
-
       "param_mapping": [
-        { "name": "_stETHAmount", "source": "arg", "arg_key": "_stETHAmount", "coerce": "uint256" }
+        {
+          "name": "_stETHAmount",
+          "source": "arg",
+          "arg_key": "_stETHAmount",
+          "coerce": "uint256"
+        }
       ]
     },
-
     "lido_unwrap_wsteth": {
       "description": "Unwrap wstETH back to stETH",
       "target_contract": "wsteth",
       "function_name": "unwrap",
       "function_selector": "0xde0e9a3e",
       "abi_source": "etherscan_cache",
-      "value_logic": { "type": "zero" },
-      "required_payload_args": ["_wstETHAmount", "human_readable_amount"],
-
+      "value_logic": {
+        "type": "zero"
+      },
+      "required_payload_args": [
+        "_wstETHAmount",
+        "human_readable_amount"
+      ],
       "payload_args": {
         "_wstETHAmount": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount",
-          "fallback_llm_fields": ["amount"],
+          "fallback_llm_fields": [
+            "amount"
+          ],
           "decimals_from": "$native",
           "balance_of": "0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0"
         },
@@ -101,34 +126,51 @@
           "template": "{amount} wstETH → stETH"
         }
       },
-
       "param_mapping": [
-        { "name": "_wstETHAmount", "source": "arg", "arg_key": "_wstETHAmount", "coerce": "uint256" }
+        {
+          "name": "_wstETHAmount",
+          "source": "arg",
+          "arg_key": "_wstETHAmount",
+          "coerce": "uint256"
+        }
       ]
     },
-
     "lido_unstake": {
       "description": "Request stETH withdrawal from Lido",
       "target_contract": "withdrawal",
       "function_name": "requestWithdrawals",
       "function_selector": "0xd6681042",
       "abi_source": "etherscan_cache",
-      "value_logic": { "type": "zero" },
-      "approvals": [{ "token": "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84", "spender": "target_contract" }],
-      "required_payload_args": ["_amounts", "_owner", "human_readable_amount"],
-
+      "value_logic": {
+        "type": "zero"
+      },
+      "approvals": [
+        {
+          "token": "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
+          "spender": "target_contract"
+        }
+      ],
+      "required_payload_args": [
+        "_amounts",
+        "_owner",
+        "human_readable_amount"
+      ],
       "payload_args": {
         "_amounts": {
           "source": "wrap_in_array",
           "llm_field": "amount",
-          "fallback_llm_fields": ["amount"],
+          "fallback_llm_fields": [
+            "amount"
+          ],
           "decimals": 18,
           "balance_of": "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84"
         },
         "_owner": {
           "source": "resolve_ens_or_hex",
           "llm_field": "onBehalfOf",
-          "fallback_llm_fields": ["_owner"],
+          "fallback_llm_fields": [
+            "_owner"
+          ],
           "context_field": "from_address"
         },
         "human_readable_amount": {
@@ -136,22 +178,35 @@
           "template": "{amount} stETH"
         }
       },
-
       "param_mapping": [
-        { "name": "_amounts", "source": "arg", "arg_key": "_amounts", "coerce": "uint256_array" },
-        { "name": "_owner",   "source": "arg", "arg_key": "_owner",   "coerce": "address" }
+        {
+          "name": "_amounts",
+          "source": "arg",
+          "arg_key": "_amounts",
+          "coerce": "uint256_array"
+        },
+        {
+          "name": "_owner",
+          "source": "arg",
+          "arg_key": "_owner",
+          "coerce": "address"
+        }
       ]
     },
-
     "lido_claim_withdrawals": {
       "description": "Claim completed Lido withdrawal requests",
       "target_contract": "withdrawal",
       "function_name": "claimWithdrawals",
       "function_selector": "0xe3afe0a3",
       "abi_source": "etherscan_cache",
-      "value_logic": { "type": "zero" },
-      "required_payload_args": ["_requestIds", "_hints", "human_readable_amount"],
-
+      "value_logic": {
+        "type": "zero"
+      },
+      "required_payload_args": [
+        "_requestIds",
+        "_hints",
+        "human_readable_amount"
+      ],
       "payload_args": {
         "_requestIds": {
           "source": "resolve_lido_withdrawal_requests",
@@ -166,10 +221,19 @@
           "template": "claim Lido withdrawals"
         }
       },
-
       "param_mapping": [
-        { "name": "_requestIds", "source": "arg", "arg_key": "_requestIds", "coerce": "uint256_array" },
-        { "name": "_hints", "source": "arg", "arg_key": "_hints", "coerce": "uint256_array" }
+        {
+          "name": "_requestIds",
+          "source": "arg",
+          "arg_key": "_requestIds",
+          "coerce": "uint256_array"
+        },
+        {
+          "name": "_hints",
+          "source": "arg",
+          "arg_key": "_hints",
+          "coerce": "uint256_array"
+        }
       ]
     }
   }

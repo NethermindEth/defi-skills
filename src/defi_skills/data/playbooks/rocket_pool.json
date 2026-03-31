@@ -2,7 +2,6 @@
   "protocol": "rocket_pool",
   "version": "1.0",
   "chain_id": 1,
-
   "contracts": {
     "deposit_pool": {
       "address": "0xDD9683b1bF4bB6d8fDF0A2B4A05aaadCA2A8a921",
@@ -13,7 +12,6 @@
       "abi_source": "etherscan_cache"
     }
   },
-
   "actions": {
     "rocketpool_stake": {
       "description": "Stake ETH via Rocket Pool (receive rETH)",
@@ -25,13 +23,17 @@
         "type": "from_arg",
         "source_arg": "value"
       },
-      "required_payload_args": ["value", "human_readable_amount"],
-
+      "required_payload_args": [
+        "value",
+        "human_readable_amount"
+      ],
       "payload_args": {
         "value": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount",
-          "fallback_llm_fields": ["value"],
+          "fallback_llm_fields": [
+            "value"
+          ],
           "decimals_from": "$native",
           "balance_of": "$native"
         },
@@ -40,24 +42,29 @@
           "template": "{amount} ETH"
         }
       },
-
       "param_mapping": []
     },
-
     "rocketpool_unstake": {
       "description": "Burn rETH to unstake from Rocket Pool (receive ETH)",
       "target_contract": "reth",
       "function_name": "burn",
       "function_selector": "0x42966c68",
       "abi_source": "etherscan_cache",
-      "value_logic": { "type": "zero" },
-      "required_payload_args": ["_rethAmount", "human_readable_amount"],
-
+      "value_logic": {
+        "type": "zero"
+      },
+      "required_payload_args": [
+        "_rethAmount",
+        "human_readable_amount"
+      ],
       "payload_args": {
         "_rethAmount": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount",
-          "fallback_llm_fields": ["_rethAmount", "amount"],
+          "fallback_llm_fields": [
+            "_rethAmount",
+            "amount"
+          ],
           "decimals_from": 18,
           "balance_of": "0xae78736Cd615f374D3085123A210448E74Fc6393"
         },
@@ -66,9 +73,13 @@
           "template": "{amount} rETH"
         }
       },
-
       "param_mapping": [
-        { "name": "_rethAmount", "source": "arg", "arg_key": "_rethAmount", "coerce": "uint256" }
+        {
+          "name": "_rethAmount",
+          "source": "arg",
+          "arg_key": "_rethAmount",
+          "coerce": "uint256"
+        }
       ]
     }
   }
