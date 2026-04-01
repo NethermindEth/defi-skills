@@ -241,8 +241,7 @@ def build_fixed_array(value: Any, ctx: ResolveContext, **kwargs) -> List[str]:
     asset_sym = (ctx.raw_args.get(asset_field) or "USDC").upper()
     idx = index_map.get(asset_sym, 0)
 
-    llm_field = kwargs.get("llm_field", "amount")
-    amount_val = ctx.raw_args.get(llm_field) or ctx.raw_args.get("amount")
+    amount_val = value
     if amount_val is not None:
         decimals = resolve_decimals(kwargs.get("decimals_from"), ctx, asset_sym=asset_sym)
         d = Decimal(str(amount_val))

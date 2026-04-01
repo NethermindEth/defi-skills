@@ -60,7 +60,7 @@ UINT128_MAX = str(2**128 - 1)
 # Fixtures
 
 @pytest.fixture(scope="session")
-def engine():
+def engine(tmp_path_factory):
     # Use a MagicMock as w3 so resolvers see a truthy provider (pass "if not w3"
     # guards) but no real network calls are made. All on-chain calls go through
     # raw_eth_call which is mocked in each test.
@@ -74,7 +74,12 @@ def engine():
         return result
     mock_w3.ens.address.side_effect = mock_ens_address
     mock_w3.ens.name.return_value = None
-    tr = TokenResolver(w3=mock_w3)
+    cache_file = tmp_path_factory.mktemp("token_cache") / "token_cache.json"
+    # Seed from package data so tests have token metadata without touching user cache
+    from defi_skills.engine.token_resolver import SEED_CACHE_PATH
+    import shutil
+    shutil.copy2(SEED_CACHE_PATH, cache_file)
+    tr = TokenResolver(cache_path=str(cache_file), w3=mock_w3)
     er = ENSResolver(w3=mock_w3)
     return PlaybookEngine(token_resolver=tr, ens_resolver=er)
 
