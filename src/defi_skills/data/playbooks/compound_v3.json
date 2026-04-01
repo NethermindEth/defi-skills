@@ -23,6 +23,7 @@
         "UNI",
         "LINK"
       ],
+      "registry_mapping": { "valid_tokens": "supply_tokens" },
       "target_contract": "comet_usdc",
       "function_name": "supply",
       "function_selector": "0xf2b9fdb8",
@@ -85,6 +86,7 @@
         "UNI",
         "LINK"
       ],
+      "registry_mapping": { "valid_tokens": "supply_tokens" },
       "target_contract": "comet_usdc",
       "function_name": "withdraw",
       "function_selector": "0xf3fef3a3",
@@ -135,6 +137,7 @@
       "valid_tokens": [
         "USDC"
       ],
+      "registry_mapping": { "valid_tokens": "borrow_tokens" },
       "target_contract": "comet_usdc",
       "function_name": "withdraw",
       "function_selector": "0xf3fef3a3",
@@ -185,6 +188,7 @@
       "valid_tokens": [
         "USDC"
       ],
+      "registry_mapping": { "valid_tokens": "borrow_tokens" },
       "target_contract": "comet_usdc",
       "function_name": "supply",
       "function_selector": "0xf2b9fdb8",

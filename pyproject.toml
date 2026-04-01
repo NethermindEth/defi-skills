@@ -19,6 +19,7 @@ dependencies = [
     "click>=8.0.0",
     "rich>=13.0.0",
     "prompt-toolkit>=3.0.0",
+    "platformdirs>=4.0.0",
 ]
 
 [project.optional-dependencies]

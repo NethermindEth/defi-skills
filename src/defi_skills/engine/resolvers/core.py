@@ -11,7 +11,7 @@ from defi_skills.engine.resolvers.common import ResolveContext, UINT256_MAX, res
 
 
 def resolve_token_address(value: str, ctx: ResolveContext, **kwargs) -> Optional[str]:
-    """Symbol -> ERC-20 contract address. Handles ETH -> WETH alias."""
+    """Symbol -> ERC-20 contract address. Rejects ETH unless eth_alias is set."""
     if not value:
         return None
     s = value.strip()
@@ -25,7 +25,13 @@ def resolve_token_address(value: str, ctx: ResolveContext, **kwargs) -> Optional
                 return info["address"]
         return s
     if s.upper() == "ETH":
-        s = kwargs.get("eth_alias", "WETH")
+        eth_alias = kwargs.get("eth_alias")
+        if eth_alias is None:
+            raise ValueError(
+                "ETH (native) is not supported for this action. "
+                "Use WETH, or wrap first with weth_wrap."
+            )
+        s = eth_alias
     if ctx.token_resolver:
         info = ctx.token_resolver.resolve_erc20(s)
         if info:
@@ -259,6 +265,9 @@ def llm_passthrough(value: Any, ctx: ResolveContext, **kwargs) -> Any:
 
 def compute_human_readable(value: Any, ctx: ResolveContext, **kwargs) -> str:
     """Render a template string using LLM args."""
+    existing = ctx.raw_args.get("human_readable_amount")
+    if existing:
+        return existing
     template = kwargs.get("template", "")
     merged = {**ctx.raw_args}
     try:
@@ -270,6 +279,5 @@ def compute_human_readable(value: Any, ctx: ResolveContext, **kwargs) -> str:
 def resolve_contract_address(value: Any, ctx: ResolveContext, **kwargs) -> Optional[str]:
     """Look up address from the playbook's contracts map."""
     contract_key = kwargs.get("contract_key", "")
-    contracts = kwargs.get("_playbook_contracts", {})
-    contract = contracts.get(contract_key, {})
+    contract = ctx.playbook_contracts.get(contract_key, {})
     return contract.get("address")

@@ -2,13 +2,20 @@
 
 import json
 import os
+import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from eth_utils import is_address
+from platformdirs import user_data_dir
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-DEFAULT_CACHE_PATH = DATA_DIR / "cache" / "token_cache.json"
+PACKAGE_DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+SEED_CACHE_PATH = PACKAGE_DATA_DIR / "cache" / "token_cache.json"
+
+
+def _default_cache_path() -> Path:
+    """Return the platform-appropriate path for the mutable token cache."""
+    return Path(user_data_dir("defi-skills", ensure_exists=True)) / "token_cache.json"
 
 # Minimal ERC-20 ABI for on-chain queries
 ERC20_MINIMAL_ABI = [
@@ -28,7 +35,14 @@ class TokenResolver:
     """Live token resolver with persistent file cache and optional on-chain/API lookups."""
 
     def __init__(self, cache_path: Optional[str] = None, w3=None):
-        self.cache_path = Path(cache_path) if cache_path else DEFAULT_CACHE_PATH
+        if cache_path:
+            self.cache_path = Path(cache_path)
+        else:
+            self.cache_path = _default_cache_path()
+            # First run: seed from package data if user cache doesn't exist
+            if not self.cache_path.exists() and SEED_CACHE_PATH.exists():
+                self.cache_path.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(SEED_CACHE_PATH, self.cache_path)
 
         # In-memory indexes
         self.erc20_by_symbol: Dict[str, Dict] = {}   # uppercase symbol -> {address, decimals, symbol, name}

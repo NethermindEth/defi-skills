@@ -86,28 +86,23 @@ class PlaybookEngine:
             self.apply_registry(protocol, reg)
 
     def apply_registry(self, protocol: str, reg: Dict) -> None:
-        """Merge registry data (valid_tokens, strategy_map) into matching action specs."""
-        valid_tokens = reg.get("valid_tokens")
-        strategy_map = reg.get("strategy_map")
-        supply_tokens = reg.get("supply_tokens")
-        borrow_tokens = reg.get("borrow_tokens")
+        """Merge registry data into matching action specs using registry_mapping."""
+        # Keys that live on the playbook meta (accessible via ctx.playbook_data),
+        # not on the action spec. strategy_map is here because resolvers read it
+        # via ctx.playbook_data, while valid_tokens is checked on the action spec.
+        PLAYBOOK_LEVEL_KEYS = {"strategy_map"}
 
         for action_name, spec in self.playbooks.items():
             pb = self.playbook_meta.get(action_name, {})
             if pb.get("protocol") != protocol:
                 continue
 
-            # EigenLayer: update valid_tokens + strategy_map on the playbook itself
-            if strategy_map is not None:
-                pb["strategy_map"] = strategy_map
-            if valid_tokens is not None and spec.get("valid_tokens") is not None:
-                spec["valid_tokens"] = valid_tokens
-
-            # Compound: supply vs borrow have different token lists
-            if supply_tokens is not None and ("supply" in action_name or "withdraw" in action_name):
-                spec["valid_tokens"] = supply_tokens
-            if borrow_tokens is not None and ("borrow" in action_name or "repay" in action_name):
-                spec["valid_tokens"] = borrow_tokens
+            for spec_key, reg_key in spec.get("registry_mapping", {}).items():
+                if reg_key in reg:
+                    if spec_key in PLAYBOOK_LEVEL_KEYS:
+                        pb[spec_key] = reg[reg_key]
+                    else:
+                        spec[spec_key] = reg[reg_key]
 
     # Stage 1: LLM output → ExecutablePayload
 
@@ -145,6 +140,8 @@ class PlaybookEngine:
             chain_id=chain_id,
             action=action,
             raw_args=args,
+            playbook_contracts=playbook.get("contracts", {}),
+            playbook_data=playbook,
         )
 
         # Enforce valid_tokens constraint before resolving anything.
@@ -221,35 +218,15 @@ class PlaybookEngine:
     ) -> Any:
         """Resolve a single payload_args entry using the appropriate resolver."""
         source = arg_spec.get("source", "constant")
+        if source == "constant":
+            return arg_spec.get("value")
+
         resolver_fn = RESOLVER_REGISTRY.get(source)
         if resolver_fn is None:
             return arg_spec.get("value")
 
         # Extract the raw value from LLM args
         raw_value = self.extract_llm_value(arg_spec, ctx)
-
-        # For resolvers that don't need a raw value (deadline, constant, etc.)
-        if source == "constant":
-            return arg_spec.get("value")
-        if source == "resolve_contract_address":
-            return resolver_fn(raw_value, ctx, _playbook_contracts=playbook.get("contracts", {}), **arg_spec)
-        if source == "resolve_eigenlayer_strategy":
-            sm_addr = playbook.get("contracts", {}).get("strategy_manager", {}).get("address")
-            return resolver_fn(raw_value, ctx, strategy_map=playbook.get("strategy_map", {}), strategy_manager_address=sm_addr, **arg_spec)
-        if source == "resolve_eigenlayer_deposits":
-            return resolver_fn(raw_value, ctx, strategy_map=playbook.get("strategy_map", {}), **arg_spec)
-        if source == "resolve_eigenlayer_queued_withdrawals":
-            return resolver_fn(raw_value, ctx, strategy_map=playbook.get("strategy_map", {}), **arg_spec)
-        if source == "compute_human_readable":
-            # Check if LLM provided a human_readable_amount, use it if available
-            existing = ctx.raw_args.get("human_readable_amount")
-            if existing:
-                return existing
-            return resolver_fn(raw_value, ctx, **arg_spec)
-        if source == "resolve_deadline":
-            return resolver_fn(raw_value, ctx, **arg_spec)
-        if source == "build_fixed_array":
-            return resolver_fn(raw_value, ctx, **arg_spec)
 
         # Standard resolver: pass raw value + kwargs from spec
         kwargs = {k: v for k, v in arg_spec.items()

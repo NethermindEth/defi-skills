@@ -243,6 +243,11 @@ TEST_CASES = [
         id="aave_borrow_stable_rejected",
     ),
     pytest.param(
+        {"action": "aave_supply", "arguments": {"asset": "ETH", "amount": "1"}},
+        {"should_raise": "ETH \\(native\\) is not supported"},
+        id="aave_supply_eth_rejected",
+    ),
+    pytest.param(
         {"action": "aave_repay", "arguments": {"asset": "USDC", "amount": "500"}},
         {"action": "aave_repay", "function_name": "repay", "target_contract": AAVE_POOL,
          "args": {"asset": USDC_ADDR, "amount": "500000000", "interestRateMode": 2, "onBehalfOf": FROM_ADDRESS}},
@@ -590,6 +595,11 @@ def test_playbook_parity(engine, llm_output, expect):
 
         import defi_skills.engine.resolvers.eigenlayer as _eigen_mod
         _eigen_mod._eigenlayer_strategy_cache = None
+
+        if expect.get("should_raise"):
+            with pytest.raises(ValueError, match=expect["should_raise"]):
+                engine.build_payload(llm_output, chain_id=CHAIN_ID, from_address=FROM_ADDRESS)
+            return
 
         try:
             payload = engine.build_payload(llm_output, chain_id=CHAIN_ID, from_address=FROM_ADDRESS)

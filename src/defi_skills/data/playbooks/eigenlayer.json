@@ -33,6 +33,7 @@
         "sfrxETH",
         "osETH"
       ],
+      "registry_mapping": { "valid_tokens": "valid_tokens", "strategy_map": "strategy_map" },
       "target_contract": "strategy_manager",
       "function_name": "depositIntoStrategy",
       "function_selector": "0xe7a050aa",
@@ -98,6 +99,7 @@
     },
     "eigenlayer_undelegate": {
       "description": "Undelegate from an EigenLayer operator",
+      "registry_mapping": { "strategy_map": "strategy_map" },
       "target_contract": "delegation_manager",
       "function_name": "undelegate",
       "function_selector": "0xda8be864",
@@ -131,6 +133,7 @@
     },
     "eigenlayer_delegate": {
       "description": "Delegate to an EigenLayer operator",
+      "registry_mapping": { "strategy_map": "strategy_map" },
       "target_contract": "delegation_manager",
       "function_name": "delegateTo",
       "function_selector": "0xeea9064b",
@@ -196,6 +199,7 @@
         "sfrxETH",
         "osETH"
       ],
+      "registry_mapping": { "valid_tokens": "valid_tokens", "strategy_map": "strategy_map" },
       "target_contract": "delegation_manager",
       "function_name": "queueWithdrawals",
       "function_selector": "0x0dd8dd02",
@@ -210,8 +214,7 @@
       "payload_args": {
         "__withdrawal_params": {
           "source": "resolve_eigenlayer_deposits",
-          "llm_field": "asset",
-          "strategy_manager_address": "0x858646372CC42E1A627fcE94aa7A7033e7CF075A"
+          "llm_field": "asset"
         },
         "human_readable_amount": {
           "source": "compute_human_readable",
@@ -228,6 +231,7 @@
     },
     "eigenlayer_complete_withdrawal": {
       "description": "Complete a queued EigenLayer withdrawal and receive tokens",
+      "registry_mapping": { "strategy_map": "strategy_map" },
       "target_contract": "delegation_manager",
       "function_name": "completeQueuedWithdrawal",
       "function_selector": "0xe4cc3f90",
@@ -241,8 +245,7 @@
       ],
       "payload_args": {
         "__queued": {
-          "source": "resolve_eigenlayer_queued_withdrawals",
-          "delegation_manager_address": "0x39053D51B77DC0d36036Fc1fCc8Cb819df8Ef37A"
+          "source": "resolve_eigenlayer_queued_withdrawals"
         },
         "human_readable_amount": {
           "source": "compute_human_readable",

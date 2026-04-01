@@ -47,6 +47,8 @@ class ResolveContext:
     raw_args: Dict[str, Any]
     resolved: Dict[str, Any] = field(default_factory=dict)
     decimals_cache: Dict[str, int] = field(default_factory=dict)
+    playbook_contracts: Dict[str, Any] = field(default_factory=dict)
+    playbook_data: Dict[str, Any] = field(default_factory=dict)
 
     def get_decimals_for(self, key: str) -> int:
         if key in self.decimals_cache:

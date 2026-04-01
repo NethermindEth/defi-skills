@@ -27,12 +27,12 @@ def resolve_eigenlayer_strategy(value: Any, ctx: ResolveContext, **kwargs) -> Op
     if not value:
         return None
 
-    sm_address = kwargs.get("strategy_manager_address")
+    sm_address = ctx.playbook_contracts.get("strategy_manager", {}).get("address")
     if not sm_address:
-        raise ValueError("resolve_eigenlayer_strategy: strategy_manager_address not provided by playbook")
+        raise ValueError("resolve_eigenlayer_strategy: strategy_manager_address not found in playbook contracts")
 
     # strategy_map comes from playbook, overridden by registry if present
-    strategy_map = kwargs.get("strategy_map", {})
+    strategy_map = ctx.playbook_data.get("strategy_map", {})
     if not strategy_map:
         raise ValueError("resolve_eigenlayer_strategy: no strategy_map available (run: python scripts/refresh_registry.py)")
 
@@ -84,9 +84,9 @@ def resolve_eigenlayer_strategy(value: Any, ctx: ResolveContext, **kwargs) -> Op
 
 def resolve_eigenlayer_deposits(value: Any, ctx: ResolveContext, **kwargs) -> List:
     """Query EigenLayer StrategyManager for user's deposits."""
-    strategy_manager = kwargs.get("strategy_manager_address")
+    strategy_manager = ctx.playbook_contracts.get("strategy_manager", {}).get("address")
     if not strategy_manager:
-        raise ValueError("resolve_eigenlayer_deposits: strategy_manager_address not provided by playbook")
+        raise ValueError("resolve_eigenlayer_deposits: strategy_manager_address not found in playbook contracts")
     w3 = ctx.token_resolver.w3 if ctx.token_resolver else None
     if not w3 or not ctx.from_address:
         raise ValueError("resolve_eigenlayer_deposits: no web3 or from_address")
@@ -102,7 +102,7 @@ def resolve_eigenlayer_deposits(value: Any, ctx: ResolveContext, **kwargs) -> Li
     if not strategies:
         raise ValueError("resolve_eigenlayer_deposits: no deposits found")
 
-    strategy_map = kwargs.get("strategy_map", {})
+    strategy_map = ctx.playbook_data.get("strategy_map", {})
     if value and str(value).strip():
         target = None
         for sym, addr in strategy_map.items():
@@ -120,9 +120,9 @@ def resolve_eigenlayer_deposits(value: Any, ctx: ResolveContext, **kwargs) -> Li
 
 def resolve_eigenlayer_queued_withdrawals(value: Any, ctx: ResolveContext, **kwargs) -> Dict:
     """Query EigenLayer for the first queued withdrawal."""
-    dm_address = kwargs.get("delegation_manager_address")
+    dm_address = ctx.playbook_contracts.get("delegation_manager", {}).get("address")
     if not dm_address:
-        raise ValueError("resolve_eigenlayer_queued_withdrawals: delegation_manager_address not provided by playbook")
+        raise ValueError("resolve_eigenlayer_queued_withdrawals: delegation_manager_address not found in playbook contracts")
     w3 = ctx.token_resolver.w3 if ctx.token_resolver else None
     if not w3 or not ctx.from_address:
         raise ValueError("resolve_eigenlayer_queued_withdrawals: no web3 or from_address")
@@ -142,7 +142,7 @@ def resolve_eigenlayer_queued_withdrawals(value: Any, ctx: ResolveContext, **kwa
     w = withdrawals[0]
     strategies = w[5] if len(w) > 5 else []
 
-    strategy_map = kwargs.get("strategy_map", {})
+    strategy_map = ctx.playbook_data.get("strategy_map", {})
     strategy_to_token = {}
     for sym, strat_addr in strategy_map.items():
         token_info = ctx.token_resolver.resolve_erc20(sym) if ctx.token_resolver else None
