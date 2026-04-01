@@ -6,6 +6,12 @@ Translate natural language into unsigned DeFi transaction payloads. A data-drive
 
 **13 protocols. 53 actions. All driven by JSON playbooks.**
 
+
+
+https://github.com/user-attachments/assets/cdc2fd63-b007-40a4-900e-a6f775b6e9fa
+
+
+
 ## Quick Start
 
 ### Install via pip (recommended)
