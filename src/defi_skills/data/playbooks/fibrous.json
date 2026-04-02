@@ -1,0 +1,108 @@
+{
+  "protocol": "fibrous",
+  "version": "1.0",
+  "description": "Fibrous multi-hop swap aggregator over multiple networks.",
+  "contracts": {},
+  "standard_abis": {
+    "fibrous_router_swap": {
+        "type": "function",
+        "name": "swap",
+        "inputs": [
+            {
+                "name": "route",
+                "type": "tuple",
+                "components": [
+                    {"name": "token_in", "type": "address"},
+                    {"name": "token_out", "type": "address"},
+                    {"name": "amount_in", "type": "uint256"},
+                    {"name": "amount_out", "type": "uint256"},
+                    {"name": "min_received", "type": "uint256"},
+                    {"name": "destination", "type": "address"},
+                    {"name": "swap_type", "type": "uint8"}
+                ]
+            },
+            {
+                "name": "swap_parameters",
+                "type": "tuple[]",
+                "components": [
+                    {"name": "token_in", "type": "address"},
+                    {"name": "token_out", "type": "address"},
+                    {"name": "rate", "type": "uint32"},
+                    {"name": "protocol_id", "type": "int24"},
+                    {"name": "pool_address", "type": "address"},
+                    {"name": "swap_type", "type": "uint8"},
+                    {"name": "extra_data", "type": "bytes"}
+                ]
+            }
+        ]
+    }
+  },
+  "actions": {
+    "fibrous_swap": {
+      "description": "Swap tokens efficiently using Fibrous aggregation.",
+      "target_contract": "$router_address",
+      "function_name": "swap",
+      "abi_source": "standard",
+      "standard_abi_key": "fibrous_router_swap",
+      "value_logic": {
+        "type": "from_arg",
+        "source_arg": "msg_value"
+      },
+      "payload_args": {
+        "asset_in": {
+          "source": "resolve_token_address",
+          "llm_field": "asset_in",
+          "description": "The exact token symbol or address to sell (e.g. WETH, USDC)",
+          "eth_alias": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+        },
+        "asset_out": {
+          "source": "resolve_token_address",
+          "llm_field": "asset_out",
+          "description": "The exact token symbol or address to buy",
+          "eth_alias": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+        },
+        "amount": {
+          "source": "resolve_amount_or_balance",
+          "llm_field": "amount",
+          "decimals_from": "$asset_in",
+          "description": "Amount to sell, or 'max'"
+        },
+        "slippage": {
+          "source": "llm_passthrough",
+          "llm_field": "slippage",
+          "optional": true
+        },
+        "msg_value": {
+          "source": "resolve_fibrous_msg_value"
+        },
+        "fibrous_data": {
+          "source": "resolve_fibrous_swap_data",
+          "description": "Hits Fibrous api/routeAndCallData and executes eth_abi decode locally."
+        },
+        "router_address": {
+          "source": "resolve_fibrous_router"
+        }
+      },
+      "param_mapping": [
+        {
+          "name": "route",
+          "source": "arg",
+          "arg_key": "fibrous_data.route_param",
+          "coerce": "raw"
+        },
+        {
+          "name": "swap_parameters",
+          "source": "arg",
+          "arg_key": "fibrous_data.swap_params",
+          "coerce": "raw"
+        }
+      ],
+      "approvals": [
+        {
+          "token": "$asset_in",
+          "spender": "$router_address"
+        }
+      ]
+    }
+  }
+}

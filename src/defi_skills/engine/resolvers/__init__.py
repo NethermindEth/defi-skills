@@ -74,6 +74,12 @@ from defi_skills.engine.resolvers.pendle import (
     resolve_pendle_yt,
 )
 
+from defi_skills.engine.resolvers.fibrous import (
+    resolve_fibrous_swap_data,
+    resolve_fibrous_router,
+    resolve_fibrous_msg_value,
+)
+
 
 RESOLVER_REGISTRY = {
     "resolve_token_address": resolve_token_address,
@@ -112,4 +118,7 @@ RESOLVER_REGISTRY = {
     "resolve_pendle_market": resolve_pendle_market,
     "resolve_pendle_min_out": resolve_pendle_min_out,
     "resolve_pendle_yt": resolve_pendle_yt,
+    "resolve_fibrous_swap_data": resolve_fibrous_swap_data,
+    "resolve_fibrous_router": resolve_fibrous_router,
+    "resolve_fibrous_msg_value": resolve_fibrous_msg_value,
 }

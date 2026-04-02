@@ -163,6 +163,9 @@ SKIP_SOURCES = frozenset({
     "resolve_aave_reward_assets",
     "resolve_pendle_min_out",
     "resolve_pendle_yt",
+    "resolve_fibrous_swap_data",
+    "resolve_fibrous_router",
+    "resolve_fibrous_msg_value",
 })
 
 
