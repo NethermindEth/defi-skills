@@ -1,0 +1,18 @@
+{
+  "name": "nethermind-defi-skills",
+  "owner": {
+    "name": "Nethermind",
+    "email": "defi-skills@nethermind.io"
+  },
+  "metadata": {
+    "description": "Natural language to unsigned DeFi transactions across 12 protocols."
+  },
+  "plugins": [
+    {
+      "name": "defi-skills",
+      "source": "./",
+      "description": "Translates natural language intents into unsigned Ethereum transaction payloads. Deterministic, no signing, no private keys.",
+      "version": "0.1.0"
+    }
+  ]
+}
