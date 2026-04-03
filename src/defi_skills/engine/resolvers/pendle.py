@@ -1,6 +1,7 @@
 """Pendle V2 resolvers: market lookup and swap quote via Pendle public API."""
 
 from datetime import datetime, timezone
+from decimal import Decimal
 from typing import Any
 
 import requests
@@ -253,7 +254,7 @@ def resolve_pendle_min_out(value: Any, ctx: ResolveContext, **kwargs) -> str:
         if rate is None:
             raise ValueError(f"resolve_pendle_min_out: rate '{rate_key}' not in API response")
 
-        quoted = int(amount_in * float(rate))
+        quoted = int(Decimal(amount_in) * Decimal(str(rate)))
 
     min_out = quoted * (10000 - slippage_bps) // 10000
     return str(min_out)
