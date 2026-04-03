@@ -99,6 +99,21 @@ Both contain the same instructions. Copy the appropriate file into your project 
 
 The agent workflow is always: discover actions (`defi-skills actions --json`), check parameters (`defi-skills actions <name> --json`), build transaction (`defi-skills build --action <name> --args '{...}' --json`).
 
+### Claude Code Plugin
+
+If you use Claude Code, you can install the skill directly as a plugin:
+
+```
+/plugin marketplace add NethermindEth/defi-skills
+/plugin install defi-skills@nethermind-defi-skills
+```
+
+After installing, invoke it with:
+
+```
+/intent-to-transaction
+```
+
 ### Why deterministic mode for agents?
 
 Agents already have an LLM (themselves). Running a second LLM inside the CLI would be redundant, slower, and more expensive. The `--action` + `--args` path uses zero LLM tokens and gives agents full control over intent classification while the engine handles the hard parts: token resolution, decimal conversion, ABI encoding, and approval handling.

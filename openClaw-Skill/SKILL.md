@@ -1,5 +1,5 @@
 ---
-name: intent-to-transaction
+name: defi-skills
 description: "Build unsigned DeFi transactions from natural language. Use when the user wants to send, transfer, swap, stake, unstake, wrap, unwrap, supply, withdraw, borrow, repay, deposit, delegate, add liquidity, remove liquidity, or trade yield tokens on-chain. Covers ETH, ERC-20, ERC-721, Aave, Lido, Uniswap, Curve, Compound, MakerDAO, Rocket Pool, EigenLayer, Balancer, Pendle, and WETH."
 version: "0.1.0"
 license: MIT-0
