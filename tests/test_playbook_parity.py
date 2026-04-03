@@ -4,6 +4,7 @@ import json
 from unittest.mock import patch, MagicMock
 
 import pytest
+import eth_abi
 
 from defi_skills.engine.playbook_engine import PlaybookEngine
 from defi_skills.engine.token_resolver import TokenResolver
@@ -188,6 +189,26 @@ def mock_pendle_requests(method, url, **kwargs):
         resp.json.return_value = {}
 
     return resp
+
+
+def mock_fibrous_requests(url, **kwargs):
+    """Mock Fibrous API responses."""
+    resp = MagicMock()
+    resp.raise_for_status = MagicMock()
+    if "routeAndCallData" in url:
+        route = (WETH_ADDR, USDC_ADDR, 500000000000000000, 1000000000, 990000000, FROM_ADDRESS, 0)
+        swap = (WETH_ADDR, USDC_ADDR, 10000, 1, MOCK_OPERATOR, 0, b"")
+        calldata = "0x8619b04e" + eth_abi.encode(
+            ['(address,address,uint256,uint256,uint256,address,uint8)', '(address,address,uint32,int24,address,uint8,bytes)[]'],
+            [route, [swap]]
+        ).hex()
+        resp.json.return_value = {
+            "success": True,
+            "calldata": calldata,
+            "router_address": MOCK_OPERATOR
+        }
+    return resp
+
 
 
 # Test cases
@@ -571,6 +592,20 @@ TEST_CASES = [
          "target_contract": PENDLE_ROUTER, "selector": "0xf7e375e8"},
         id="pendle_claim_rewards",
     ),
+    # ── Fibrous ──
+    pytest.param(
+        {"action": "fibrous_swap", "arguments": {"asset_in": "WETH", "asset_out": "USDC", "amount": "0.5"}},
+        {"action": "fibrous_swap", "function_name": "swap",
+         "target_contract": MOCK_OPERATOR, "selector": "0x8619b04e", "chain_id": 8453},
+        id="fibrous_swap",
+    ),
+    pytest.param(
+        {"action": "fibrous_swap", "arguments": {"asset_in": "ETH", "asset_out": "USDC", "amount": "0.5"}},
+        {"action": "fibrous_swap", "function_name": "swap",
+         "target_contract": MOCK_OPERATOR, "selector": "0x8619b04e",
+         "value_nonzero": True, "chain_id": 8453},  # Native ETH sends amount as value!
+        id="fibrous_swap_native_eth",
+    ),
     # ── Error cases ──
     pytest.param(
         {"action": "nonexistent_action", "arguments": {"foo": "bar"}},
@@ -595,6 +630,7 @@ def test_playbook_parity(engine, llm_output, expect):
          patch("defi_skills.engine.resolvers.balancer.urllib.request.urlopen", side_effect=mock_urlopen), \
          patch("defi_skills.engine.resolvers.pendle.requests.get", side_effect=lambda url, **kw: mock_pendle_requests("GET", url, **kw)), \
          patch("defi_skills.engine.resolvers.pendle.requests.post", side_effect=lambda url, **kw: mock_pendle_requests("POST", url, **kw)), \
+         patch("defi_skills.engine.resolvers.fibrous.requests.get", side_effect=lambda url, **kw: mock_fibrous_requests(url, **kw)), \
          patch.dict("os.environ", {"THEGRAPH_API_KEY": "test-key"}):
         mock_time.time.return_value = FIXED_TIME
 
@@ -607,7 +643,8 @@ def test_playbook_parity(engine, llm_output, expect):
             return
 
         try:
-            payload = engine.build_payload(llm_output, chain_id=CHAIN_ID, from_address=FROM_ADDRESS)
+            cid = expect.get("chain_id", CHAIN_ID)
+            payload = engine.build_payload(llm_output, chain_id=cid, from_address=FROM_ADDRESS)
         except (ValueError, KeyError):
             payload = None
 

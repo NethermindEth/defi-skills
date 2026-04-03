@@ -32,6 +32,15 @@ def resolve_token_address(value: str, ctx: ResolveContext, **kwargs) -> Optional
                 "Use WETH, or wrap first with weth_wrap."
             )
         s = eth_alias
+        # If the alias is a literal hex address (like Fibonacci's 0xeee... sentinel),
+        # return it immediately and cache 18 decimals if it's a native sentinel.
+        if s.startswith("0x") and is_valid_eth_address(s):
+            if s.lower() in (
+                "0x0000000000000000000000000000000000000000",
+                "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            ):
+                ctx.decimals_cache[s] = 18
+            return s
     if ctx.token_resolver:
         info = ctx.token_resolver.resolve_erc20(s)
         if info:
