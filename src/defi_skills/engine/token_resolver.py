@@ -238,7 +238,7 @@ class TokenResolver:
             headers = {"Authorization": f"Bearer {self.oneinch_api_key}"}
             params = {
                 "query": symbol,
-                "limit": 1,
+                "limit": 10,
                 "only_positive_rating": "false",
             }
             resp = requests.get(url, headers=headers, params=params, timeout=10)

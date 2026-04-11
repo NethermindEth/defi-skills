@@ -1,0 +1,35 @@
+{
+  "erc20_tokens": {
+    "USDC": {
+      "address": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
+      "decimals": 6,
+      "symbol": "USDC",
+      "name": "USD Coin"
+    },
+    "WETH": {
+      "address": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
+      "decimals": 18,
+      "symbol": "WETH",
+      "name": "Wrapped Ether"
+    },
+    "USDT": {
+      "address": "0x70F5A2e1Dc34fad3C3c953713aF2eD2952b9dd63",
+      "decimals": 6,
+      "symbol": "USDT",
+      "name": "USDT"
+    },
+    "DAI": {
+      "address": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
+      "decimals": 18,
+      "symbol": "DAI",
+      "name": "Dai Stablecoin"
+    },
+    "WBTC": {
+      "address": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
+      "decimals": 8,
+      "symbol": "WBTC",
+      "name": "Wrapped BTC"
+    }
+  },
+  "erc721_collections": {}
+}

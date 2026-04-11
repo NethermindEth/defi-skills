@@ -46,5 +46,5 @@ defi-skills config set alchemy_api_key "your-key"
 
 | Variable | Purpose | When you need it |
 |----------|---------|------------------|
-| `ETHERSCAN_API_KEY` | Fetch verified contract ABIs | Only when adding a new protocol. Run `python -m defi_skills.data.fetch_abis` once, then the ABIs are cached locally. |
-| `ONEINCH_API_KEY` | Token symbol discovery | Only when resolving a token not in the local cache (~100 common tokens are pre-cached). Falls back to on-chain query via Alchemy if not set. |
+| `ETHERSCAN_API_KEY` | Fetch verified contract ABIs | Only when adding a new protocol or chain. Run `python -m defi_skills.data.fetch_abis` once, then the ABIs are cached locally. Supports all chains via Etherscan V2 API. |
+| `ONEINCH_API_KEY` | Token symbol discovery on L2s | Recommended for multi-chain usage. Auto-discovers tokens (WETH, USDC, etc.) on Arbitrum, Base, Optimism, Polygon via 1inch API. Without it, only pre-cached tokens are available on L2s. |

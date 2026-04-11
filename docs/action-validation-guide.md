@@ -177,7 +177,7 @@ When submitting a PR for a new protocol, include the following in the PR descrip
 - [ ] Playbook JSON added (`data/playbooks/<protocol>.json`)
 - [ ] Chain resource files added (`data/chains/<chain_id>/<protocol>.json`)
 - [ ] Custom resolvers added (if needed)
-- [ ] ABI cache entries added for new contracts
+- [ ] ABI cache fetched via `python -m defi_skills.data.fetch_abis`
 - [ ] Token cache updated (if protocol uses new tokens)
 
 ### Tests

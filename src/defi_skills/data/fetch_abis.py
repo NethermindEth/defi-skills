@@ -199,29 +199,42 @@ def find_function_in_abi(abi: List[Dict], func_name: str) -> Optional[Dict]:
     return None
 
 
+def collect_chain_resource_contracts(data_dir: Path) -> Dict[str, tuple]:
+    """Scan data/chains/{chain_id}/{protocol}.json for contract addresses."""
+    contracts: Dict[str, tuple] = {}
+    chains_dir = data_dir / "chains"
+    if not chains_dir.exists():
+        return contracts
+    for chain_dir in sorted(chains_dir.iterdir()):
+        if not chain_dir.is_dir():
+            continue
+        try:
+            chain_id = int(chain_dir.name)
+        except ValueError:
+            continue
+        for resource_file in sorted(chain_dir.glob("*.json")):
+            protocol = resource_file.stem
+            resource = json.loads(resource_file.read_text())
+            for key, value in resource.items():
+                # Skip non-address keys (action_overrides, token_overrides, etc.)
+                if not isinstance(value, str) or not value.startswith("0x"):
+                    continue
+                name = f"{protocol}/{key}"
+                # Don't overwrite if already seen (dedup by address)
+                if value not in contracts:
+                    contracts[value] = (name, chain_id)
+    return contracts
+
+
 def main():
-    playbooks_dir = Path(__file__).parent / "playbooks"
+    data_dir = Path(__file__).parent
+    playbooks_dir = data_dir / "playbooks"
 
     print("ABI Bootstrap — Fetching from Etherscan V2")
     print("=" * 60)
 
-    # Collect all unique contract addresses from playbook JSONs (root + subdirs)
-    contracts: Dict[str, tuple] = {}  # address -> (name, chain_id)
-    playbooks = []
-    json_files = sorted(playbooks_dir.glob("*.json"))
-    for subdir in sorted(playbooks_dir.iterdir()):
-        if subdir.is_dir():
-            json_files.extend(sorted(subdir.glob("*.json")))
-
-    for pb_file in json_files:
-        pb = json.loads(pb_file.read_text())
-        playbooks.append(pb)
-        protocol = pb.get("protocol", pb_file.stem)
-        chain_id = pb.get("chain_id", 1)
-        for key, contract_info in pb.get("contracts", {}).items():
-            addr = contract_info.get("address", "")
-            if addr:
-                contracts[addr] = (f"{protocol}/{key}", chain_id)
+    # Collect contract addresses from ChainResources (data/chains/)
+    contracts: Dict[str, tuple] = collect_chain_resource_contracts(data_dir)
 
     print(f"Contracts to fetch: {len(contracts)}")
     print()
@@ -235,35 +248,45 @@ def main():
 
     print()
 
-    # Verify all playbook actions have their functions in the fetched ABIs
+    # Verify: for each playbook action, check the target contract has the function in its ABI
     print("Verifying action → function mapping:")
     print("-" * 60)
 
     all_ok = True
-    for pb in playbooks:
-        contracts_map = pb.get("contracts", {})
+    for pb_file in sorted(playbooks_dir.glob("*.json")):
+        pb = json.loads(pb_file.read_text())
+        protocol = pb.get("protocol", pb_file.stem)
         for action_name, action_spec in pb.get("actions", {}).items():
             func_name = action_spec.get("function_name")
             target_key = action_spec.get("target_contract")
             if not func_name or not target_key:
                 continue
 
-            contract_info = contracts_map.get(target_key, {})
-            target_addr = contract_info.get("address", "")
-            abi = abi_map.get(target_addr.lower())
+            # Find any chain resource that has this target_key for this protocol
+            verified = False
+            for chain_dir in sorted((data_dir / "chains").iterdir()):
+                if not chain_dir.is_dir():
+                    continue
+                resource_file = chain_dir / f"{protocol}.json"
+                if not resource_file.exists():
+                    continue
+                resource = json.loads(resource_file.read_text())
+                target_addr = resource.get(target_key, "")
+                if not target_addr or not isinstance(target_addr, str):
+                    continue
+                abi = abi_map.get(target_addr.lower())
+                if not abi:
+                    continue
+                func_entry = find_function_in_abi(abi, func_name)
+                if func_entry:
+                    types = [i["type"] for i in func_entry.get("inputs", [])]
+                    sig = f"{func_name}({','.join(types)})"
+                    print(f"  ✓ {action_name:25s} — {sig}")
+                    verified = True
+                    break
 
-            if not abi:
-                print(f"  ✗ {action_name:25s} — no ABI for {target_addr[:14]}...")
-                all_ok = False
-                continue
-
-            func_entry = find_function_in_abi(abi, func_name)
-            if func_entry:
-                types = [i["type"] for i in func_entry.get("inputs", [])]
-                sig = f"{func_name}({','.join(types)})"
-                print(f"  ✓ {action_name:25s} — {sig}")
-            else:
-                print(f"  ✗ {action_name:25s} — '{func_name}' not found in ABI")
+            if not verified:
+                print(f"  ✗ {action_name:25s} — '{func_name}' not found in any chain ABI")
                 all_ok = False
 
     print()

@@ -349,6 +349,15 @@ For testnets or chains where the protocol uses a different ABI or different toke
 - **`token_overrides`**: protocol-scoped token address remapping (e.g. Aave's test WETH on Sepolia)
 - **`action_overrides`**: per-action ABI overrides merged on top of the base playbook (e.g. Uniswap SwapRouter02 on Sepolia has a different selector and no deadline field)
 
+After adding chain resource files, fetch the ABIs for the new contract addresses:
+
+```bash
+export ETHERSCAN_API_KEY="..."
+python -m defi_skills.data.fetch_abis
+```
+
+This scans all `data/chains/{chain_id}/{protocol}.json` files, fetches verified ABIs from Etherscan V2 (handles proxies and Diamond patterns automatically), caches them in `data/abi_cache/`, and verifies that every playbook action's function exists in the fetched ABI.
+
 #### Step 10: Validate
 
 **Unit tests:**
@@ -373,33 +382,34 @@ See [docs/action-validation-guide.md](docs/action-validation-guide.md) for the f
 
 ### Multi-Chain Support
 
-The engine supports multiple chains through a layered architecture:
+The engine supports 6 chains: Ethereum Mainnet (1), Arbitrum (42161), Base (8453), Optimism (10), Polygon (137), and Sepolia (11155111).
 
 ```
 Playbook (chain-agnostic)     →  action logic, $ references, param mappings
 ChainResources (per-chain)    →  contract addresses, action/token overrides
-TokenResolver (per-chain)     →  symbol → address + decimals via Alchemy RPC
+TokenResolver (per-chain)     →  symbol → address + decimals via 1inch + Alchemy RPC
 ```
 
 **Adding a protocol to a new chain:**
 
 1. Create `data/chains/{chain_id}/{protocol}.json` with the chain's contract addresses
-2. If the protocol uses different ABIs on this chain, add `action_overrides`
-3. If the protocol uses different token addresses (e.g. test tokens), add `token_overrides`
-4. Add ABI cache entries for any new contract addresses
+2. If the protocol uses different ABIs on this chain, add `action_overrides` (e.g. Uniswap SwapRouter02 on Base/Sepolia)
+3. If the protocol uses different token addresses (e.g. USDC.e on Polygon Compound, test tokens on Sepolia), add `token_overrides`
+4. Fetch ABIs: `python -m defi_skills.data.fetch_abis` (handles proxies automatically)
 5. Run fork validation on the new chain
 
 **Adding a completely new chain:**
 
-1. Register the chain in `src/defi_skills/engine/chains.py` (chain config with RPC slug, ENS support, etc.)
+1. Register the chain in `src/defi_skills/engine/chains.py` (chain config with Alchemy slug, 1inch chain ID, native symbol, WETH address)
 2. Create `data/chains/{chain_id}/` with protocol resource files
-3. Create `data/cache/token_cache_{chain_id}.json` with known tokens on that chain
-4. The `TokenResolver` automatically uses the chain-specific Alchemy RPC for on-chain lookups
+3. Fetch ABIs: `python -m defi_skills.data.fetch_abis`
+4. The `TokenResolver` automatically discovers tokens via 1inch API and Alchemy RPC -- no manual token cache needed (requires `ONEINCH_API_KEY` and `ALCHEMY_API_KEY` with the chain enabled)
 
 **Key rules:**
 - Playbooks never contain hardcoded addresses. Use `$` references.
-- The global token cache (`token_cache_{chain_id}.json`) must have canonical token addresses, not protocol-specific test tokens. Protocol-specific addresses go in `token_overrides`.
+- Token caches are auto-populated by the resolver. If a protocol uses non-canonical tokens (e.g. USDC.e instead of native USDC), add `token_overrides` in the chain resource file.
 - `chain_agnostic: true` in a playbook means the action is available on all chains (e.g. ERC-20 transfers).
+- Polygon's native token is POL, not ETH. WETH wrap/unwrap is not available on Polygon.
 
 ### Common Patterns
 
