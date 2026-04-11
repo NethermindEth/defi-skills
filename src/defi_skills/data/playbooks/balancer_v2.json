@@ -1,13 +1,6 @@
 {
   "protocol": "balancer_v2",
   "version": "1.0",
-  "chain_id": 1,
-  "contracts": {
-    "vault": {
-      "address": "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
-      "abi_source": "etherscan_cache"
-    }
-  },
   "actions": {
     "balancer_swap": {
       "description": "Swap tokens via Balancer V2 Vault single swap",
@@ -78,7 +71,7 @@
         "limit": {
           "source": "resolve_balancer_limit",
           "slippage_bps": 50,
-          "vault_address": "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+          "vault_address": "$vault"
         },
         "human_readable_amount": {
           "source": "compute_human_readable",
@@ -218,7 +211,7 @@
         },
         "__pool_tokens": {
           "source": "resolve_balancer_pool_tokens",
-          "vault_address": "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+          "vault_address": "$vault"
         },
         "amount": {
           "source": "resolve_amount_or_balance",
@@ -339,7 +332,7 @@
         },
         "__pool_tokens": {
           "source": "resolve_balancer_pool_tokens",
-          "vault_address": "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+          "vault_address": "$vault"
         },
         "amount": {
           "source": "resolve_amount_or_balance",

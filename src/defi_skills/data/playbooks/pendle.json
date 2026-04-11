@@ -1,13 +1,6 @@
 {
   "protocol": "pendle",
   "version": "1.0",
-  "chain_id": 1,
-  "contracts": {
-    "router": {
-      "address": "0x888888888889758F76e7103c6CbF23ABbF58F946",
-      "abi_source": "etherscan_cache"
-    }
-  },
   "actions": {
     "pendle_swap_token_for_pt": {
       "description": "Swap an ERC-20 token for Principal Token (PT) on a Pendle market",
@@ -41,12 +34,12 @@
         "market": {
           "source": "resolve_pendle_market",
           "llm_field": "market",
-          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address — auto-resolves to the active Pendle market"
+          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address \u2014 auto-resolves to the active Pendle market"
         },
         "asset": {
           "source": "resolve_token_address",
           "llm_field": "asset",
-          "description": "Token to spend — name (e.g. \"USDC\") or address"
+          "description": "Token to spend \u2014 name (e.g. \"USDC\") or address"
         },
         "amount": {
           "source": "resolve_amount_or_balance",
@@ -253,12 +246,12 @@
         "market": {
           "source": "resolve_pendle_market",
           "llm_field": "market",
-          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address — auto-resolves to the active Pendle market"
+          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address \u2014 auto-resolves to the active Pendle market"
         },
         "asset_out": {
           "source": "resolve_token_address",
           "llm_field": "asset_out",
-          "description": "Token to receive — name (e.g. \"wstETH\") or address"
+          "description": "Token to receive \u2014 name (e.g. \"wstETH\") or address"
         },
         "amount": {
           "source": "resolve_amount",
@@ -440,12 +433,12 @@
         "market": {
           "source": "resolve_pendle_market",
           "llm_field": "market",
-          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address — auto-resolves to the active Pendle market"
+          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address \u2014 auto-resolves to the active Pendle market"
         },
         "asset": {
           "source": "resolve_token_address",
           "llm_field": "asset",
-          "description": "Token to spend — name (e.g. \"USDC\") or address"
+          "description": "Token to spend \u2014 name (e.g. \"USDC\") or address"
         },
         "amount": {
           "source": "resolve_amount_or_balance",
@@ -652,12 +645,12 @@
         "market": {
           "source": "resolve_pendle_market",
           "llm_field": "market",
-          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address — auto-resolves to the active Pendle market"
+          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address \u2014 auto-resolves to the active Pendle market"
         },
         "asset_out": {
           "source": "resolve_token_address",
           "llm_field": "asset_out",
-          "description": "Token to receive — name (e.g. \"wstETH\") or address"
+          "description": "Token to receive \u2014 name (e.g. \"wstETH\") or address"
         },
         "amount": {
           "source": "resolve_amount",
@@ -839,12 +832,12 @@
         "market": {
           "source": "resolve_pendle_market",
           "llm_field": "market",
-          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address — auto-resolves to the active Pendle market"
+          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address \u2014 auto-resolves to the active Pendle market"
         },
         "asset": {
           "source": "resolve_token_address",
           "llm_field": "asset",
-          "description": "Token to spend — name (e.g. \"USDC\") or address"
+          "description": "Token to spend \u2014 name (e.g. \"USDC\") or address"
         },
         "amount": {
           "source": "resolve_amount_or_balance",
@@ -1051,12 +1044,12 @@
         "market": {
           "source": "resolve_pendle_market",
           "llm_field": "market",
-          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address — auto-resolves to the active Pendle market"
+          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address \u2014 auto-resolves to the active Pendle market"
         },
         "asset_out": {
           "source": "resolve_token_address",
           "llm_field": "asset_out",
-          "description": "Token to receive — name (e.g. \"wstETH\") or address"
+          "description": "Token to receive \u2014 name (e.g. \"wstETH\") or address"
         },
         "amount": {
           "source": "resolve_amount_or_balance",
@@ -1240,7 +1233,7 @@
         "market": {
           "source": "resolve_pendle_market",
           "llm_field": "market",
-          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address — auto-resolves to the active Pendle market"
+          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address \u2014 auto-resolves to the active Pendle market"
         },
         "yt_address": {
           "source": "resolve_pendle_yt",
@@ -1250,7 +1243,7 @@
         "asset": {
           "source": "resolve_token_address",
           "llm_field": "asset",
-          "description": "Token to spend — name (e.g. \"USDC\") or address"
+          "description": "Token to spend \u2014 name (e.g. \"USDC\") or address"
         },
         "amount": {
           "source": "resolve_amount_or_balance",
@@ -1386,7 +1379,7 @@
         "market": {
           "source": "resolve_pendle_market",
           "llm_field": "market",
-          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address — auto-resolves to the active Pendle market"
+          "description": "Token name (e.g. \"wstETH\", \"USDC\") or market address \u2014 auto-resolves to the active Pendle market"
         },
         "yt_address": {
           "source": "resolve_pendle_yt",
@@ -1396,7 +1389,7 @@
         "asset_out": {
           "source": "resolve_token_address",
           "llm_field": "asset_out",
-          "description": "Token to receive — name (e.g. \"wstETH\") or address"
+          "description": "Token to receive \u2014 name (e.g. \"wstETH\") or address"
         },
         "amount": {
           "source": "resolve_amount",

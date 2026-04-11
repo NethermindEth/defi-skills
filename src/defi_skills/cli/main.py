@@ -21,15 +21,9 @@ MAGENTA = "\033[35m"
 
 
 def init_engine():
-    """Initialize PlaybookEngine + resolvers."""
-    from defi_skills.engine.token_resolver import TokenResolver
-    from defi_skills.engine.ens_resolver import ENSResolver
+    """Initialize PlaybookEngine. Resolvers are created on demand per chain."""
     from defi_skills.engine.playbook_engine import PlaybookEngine
-
-    tr = TokenResolver()
-    er = ENSResolver(w3=tr.w3)
-    engine = PlaybookEngine(token_resolver=tr, ens_resolver=er)
-    return engine, tr, er
+    return PlaybookEngine()
 
 
 def build_tx(engine, action, arguments, from_address, chain_id):
@@ -357,22 +351,30 @@ def config_setup():
 @main.command()
 @click.argument("action_name", required=False)
 @click.option("--json", "-j", "json_output", is_flag=True, help="Output raw JSON.")
-def actions(action_name, json_output):
+@click.option("--chain-id", "-c", "chain_id", type=int, default=1,
+              help="Chain ID (1=mainnet, 11155111=sepolia)")
+def actions(action_name, json_output, chain_id):
     """List supported actions, or show details for a specific action.
 
     \b
     Examples:
-      defi-skills actions                 # list all
-      defi-skills actions aave_supply     # show params for aave_supply
-      defi-skills actions --json          # list all as JSON
+      defi-skills actions                           # list all (mainnet)
+      defi-skills actions --chain-id 11155111       # list Sepolia actions
+      defi-skills actions aave_supply               # show params for aave_supply
+      defi-skills actions --json                    # list all as JSON
     """
-    engine, _, _ = init_engine()
+    engine = init_engine()
 
     if action_name:
         spec = engine.playbooks.get(action_name)
         if not spec:
             click.echo(f"{RED}Unknown action: '{action_name}'{RESET}", err=True)
             click.echo(f"Run 'defi-skills actions' to see all supported actions.", err=True)
+            raise SystemExit(1)
+
+        if not engine._action_available(action_name, chain_id):
+            click.echo(f"{RED}Action '{action_name}' is not available on chain {chain_id}.{RESET}", err=True)
+            click.echo(f"Run 'defi-skills actions --chain-id {chain_id}' to see available actions.", err=True)
             raise SystemExit(1)
 
         pb = engine.playbook_meta.get(action_name, {})
@@ -405,7 +407,7 @@ def actions(action_name, json_output):
                 click.echo(f"    {DIM}(none){RESET}")
             click.echo()
     else:
-        by_protocol = engine.get_actions_by_protocol()
+        by_protocol = engine.get_actions_by_protocol(chain_id)
 
         if json_output:
             click.echo(json.dumps({
@@ -430,7 +432,7 @@ def actions(action_name, json_output):
 @click.option("--args", "-A", "args_json", default=None, help="JSON arguments (e.g. '{\"asset\":\"USDC\",\"amount\":\"500\"}').")
 @click.option("--json", "-j", "json_output", is_flag=True, help="Output raw JSON.")
 @click.option("--wallet", "-w", default=None, help="Override wallet address.")
-@click.option("--chain", "-c", "chain_id", type=int, default=1,
+@click.option("--chain-id", "-c", "chain_id", type=int, default=1,
               help="Chain ID (1=mainnet, 11155111=sepolia)")
 def build(action_name, args_json, json_output, wallet, chain_id):
     """Build an unsigned Ethereum transaction (deterministic, no LLM).
@@ -458,7 +460,7 @@ def build(action_name, args_json, json_output, wallet, chain_id):
     if not json_output:
         click.echo(f"  {DIM}Loading engine...{RESET}", err=True)
 
-    engine, _, _ = init_engine()
+    engine = init_engine()
     result = build_tx(engine, action_name, arguments, wallet_addr, chain_id)
 
     if json_output:
@@ -476,7 +478,7 @@ def build(action_name, args_json, json_output, wallet, chain_id):
 @click.option("--model", "-m", default=None, help="LLM model (e.g. claude-sonnet-4-6, gpt-5.4).")
 @click.option("--wallet", "-w", default=None, help="Override wallet address.")
 @click.option("--stream/--no-stream", default=None, help="Stream text live (raw) or wait for formatted output.")
-@click.option("--chain", "-c", "chain_id", type=int, default=1,
+@click.option("--chain-id", "-c", "chain_id", type=int, default=1,
               help="Chain ID (1=mainnet, 11155111=sepolia)")
 def chat(model, wallet, stream, chain_id):
     """Interactive DeFi transaction assistant (uses LLM with tool calling).
@@ -500,7 +502,7 @@ def chat(model, wallet, stream, chain_id):
         stream = stream_cfg.lower() == "true" if stream_cfg else False
 
     click.echo(f"  {DIM}Loading engine...{RESET}", err=True)
-    engine, _, _ = init_engine()
+    engine = init_engine()
 
     from defi_skills.cli.chat import run_chat
     run_chat(engine, wallet_addr, chain_id, model_name, stream=stream)
@@ -512,7 +514,7 @@ def chat(model, wallet, stream, chain_id):
               help='JSON array of steps: \'[{"action":"...","args":{...}}, ...]\'')
 @click.option("--json", "-j", "json_output", is_flag=True, help="Output raw JSON.")
 @click.option("--wallet", "-w", default=None, help="Override wallet address.")
-@click.option("--chain", "-c", "chain_id", type=int, default=1,
+@click.option("--chain-id", "-c", "chain_id", type=int, default=1,
               help="Chain ID (1=mainnet, 11155111=sepolia)")
 def simulate(action_name, args_json, multi_step_json, json_output, wallet, chain_id):
     """Build and simulate transactions on a local Anvil fork.
@@ -546,7 +548,7 @@ def simulate(action_name, args_json, multi_step_json, json_output, wallet, chain
     if not json_output:
         click.echo(f"  {DIM}Loading engine...{RESET}", err=True)
 
-    engine, _, _ = init_engine()
+    engine = init_engine()
 
     if action_name:
         # Single action mode (existing behavior)

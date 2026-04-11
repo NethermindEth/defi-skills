@@ -23,19 +23,13 @@ from pydantic import BaseModel, Field
 from litellm import completion
 
 from defi_skills.engine.playbook_engine import PlaybookEngine
-from defi_skills.engine.token_resolver import TokenResolver
-from defi_skills.engine.ens_resolver import ENSResolver
 from defi_skills.engine.chains import supported_chain_ids, get_chain_config
 
 # ---------------------------------------------------------------------------
-# Engine initialisation (one per supported chain)
+# Engine initialisation — single engine, resolvers created per chain on demand
 # ---------------------------------------------------------------------------
 
-engines: Dict[int, PlaybookEngine] = {}
-for _cid in supported_chain_ids():
-    _tr = TokenResolver(chain_id=_cid)
-    _er = ENSResolver(w3=_tr.w3, chain_id=_cid)
-    engines[_cid] = PlaybookEngine(token_resolver=_tr, ens_resolver=_er)
+engine = PlaybookEngine()
 
 app = FastAPI(title="DeFi Agent", version="0.2.0")
 HERE = Path(__file__).parent
@@ -282,10 +276,10 @@ def execute_tool(name, arguments, engine, chain_id, wallet_state):
 
     if name == "action_info":
         action_name = arguments.get("action_name", "")
-        spec = engine.playbooks.get(chain_id, {}).get(action_name)
+        spec = engine.playbooks.get(action_name)
         if not spec:
             return {"error": f"Unknown action: '{action_name}'. Use list_actions to see available actions."}, []
-        pb = engine.playbook_meta.get(chain_id, {}).get(action_name, {})
+        pb = engine.playbook_meta.get(action_name, {})
         required, optional = get_action_params(spec)
         result = {
             "action": action_name,
@@ -333,7 +327,6 @@ def execute_tool(name, arguments, engine, chain_id, wallet_state):
 def build_system_prompt(chain_id):
     """Chain-aware system prompt for the tool-calling agent."""
     chain = get_chain_config(chain_id)
-    engine = engines[chain_id]
     by_protocol = engine.get_actions_by_protocol(chain_id)
 
     actions_lines = []
@@ -386,7 +379,6 @@ def run_agent_turn(session, user_message):
     Returns {reply, transactions, tool_log, awaiting_tx}.
     """
     chain_id = session["chain_id"]
-    engine = engines[chain_id]
     wallet_state = session["wallet_state"]
     messages = session["messages"]
 
@@ -480,15 +472,16 @@ def run_agent_turn(session, user_message):
 @app.post("/session", response_model=CreateSessionResponse)
 def create_session(req: CreateSessionRequest):
     """Create a new agent session with a chain-aware system prompt."""
-    if req.chain_id not in engines:
-        supported = ", ".join(str(c) for c in engines)
+    # Validate chain_id is known
+    try:
+        chain = get_chain_config(req.chain_id)
+    except ValueError:
+        supported = ", ".join(str(c) for c in supported_chain_ids())
         raise HTTPException(400, f"Unsupported chain_id {req.chain_id}. Supported: {supported}")
 
     _evict_sessions()
 
     session_id = uuid.uuid4().hex[:12]
-    chain = get_chain_config(req.chain_id)
-    engine = engines[req.chain_id]
     by_protocol = engine.get_actions_by_protocol(req.chain_id)
     actions_count = sum(len(v) for v in by_protocol.values())
 
@@ -551,20 +544,14 @@ def delete_session(session_id: str):
 
 @app.get("/actions")
 def list_actions_endpoint(chain_id: int = 1):
-    eng = engines.get(chain_id)
-    if not eng:
-        raise HTTPException(400, f"Unsupported chain_id: {chain_id}")
-    by_protocol = eng.get_actions_by_protocol(chain_id)
+    by_protocol = engine.get_actions_by_protocol(chain_id)
     return {"by_protocol": by_protocol, "count": sum(len(v) for v in by_protocol.values())}
 
 
 @app.post("/build")
 def build(req: BuildRequest):
-    eng = engines.get(req.chain_id)
-    if not eng:
-        raise HTTPException(400, f"Unsupported chain_id: {req.chain_id}")
     llm_output = {"action": req.action, "arguments": req.arguments}
-    result = eng.build_transactions(llm_output, chain_id=req.chain_id, from_address=req.from_address)
+    result = engine.build_transactions(llm_output, chain_id=req.chain_id, from_address=req.from_address)
     if not result.get("success"):
         raise HTTPException(422, result.get("error", "Build failed"))
     return result
@@ -590,10 +577,10 @@ if __name__ == "__main__":
     import uvicorn
 
     total = sum(
-        sum(len(v) for v in eng.get_actions_by_protocol(cid).values())
-        for cid, eng in engines.items()
+        sum(len(v) for v in engine.get_actions_by_protocol(cid).values())
+        for cid in supported_chain_ids()
     )
-    chains = ", ".join(get_chain_config(c).name for c in engines)
+    chains = ", ".join(get_chain_config(c).name for c in supported_chain_ids())
     print(f"\n  DeFi Agent running at http://localhost:8000")
     print(f"  Chains: {chains}")
     print(f"  Total actions: {total}\n")

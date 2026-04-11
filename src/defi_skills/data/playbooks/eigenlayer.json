@@ -1,17 +1,6 @@
 {
   "protocol": "eigenlayer",
   "version": "1.0",
-  "chain_id": 1,
-  "contracts": {
-    "strategy_manager": {
-      "address": "0x858646372CC42E1A627fcE94aa7A7033e7CF075A",
-      "abi_source": "etherscan_cache"
-    },
-    "delegation_manager": {
-      "address": "0x39053D51B77DC0d36036Fc1fCc8Cb819df8Ef37A",
-      "abi_source": "etherscan_cache"
-    }
-  },
   "strategy_map": {
     "stETH": "0x93c4b944D05dfe6df7645A86cd2206016c51564D",
     "rETH": "0x1BeE69b7dFFfA4E2d53C2a2Df135C388AD25dCD2",
@@ -33,7 +22,10 @@
         "sfrxETH",
         "osETH"
       ],
-      "registry_mapping": { "valid_tokens": "valid_tokens", "strategy_map": "strategy_map" },
+      "registry_mapping": {
+        "valid_tokens": "valid_tokens",
+        "strategy_map": "strategy_map"
+      },
       "target_contract": "strategy_manager",
       "function_name": "depositIntoStrategy",
       "function_selector": "0xe7a050aa",
@@ -99,7 +91,9 @@
     },
     "eigenlayer_undelegate": {
       "description": "Undelegate from an EigenLayer operator",
-      "registry_mapping": { "strategy_map": "strategy_map" },
+      "registry_mapping": {
+        "strategy_map": "strategy_map"
+      },
       "target_contract": "delegation_manager",
       "function_name": "undelegate",
       "function_selector": "0xda8be864",
@@ -133,7 +127,9 @@
     },
     "eigenlayer_delegate": {
       "description": "Delegate to an EigenLayer operator",
-      "registry_mapping": { "strategy_map": "strategy_map" },
+      "registry_mapping": {
+        "strategy_map": "strategy_map"
+      },
       "target_contract": "delegation_manager",
       "function_name": "delegateTo",
       "function_selector": "0xeea9064b",
@@ -199,7 +195,10 @@
         "sfrxETH",
         "osETH"
       ],
-      "registry_mapping": { "valid_tokens": "valid_tokens", "strategy_map": "strategy_map" },
+      "registry_mapping": {
+        "valid_tokens": "valid_tokens",
+        "strategy_map": "strategy_map"
+      },
       "target_contract": "delegation_manager",
       "function_name": "queueWithdrawals",
       "function_selector": "0x0dd8dd02",
@@ -231,7 +230,9 @@
     },
     "eigenlayer_complete_withdrawal": {
       "description": "Complete a queued EigenLayer withdrawal and receive tokens",
-      "registry_mapping": { "strategy_map": "strategy_map" },
+      "registry_mapping": {
+        "strategy_map": "strategy_map"
+      },
       "target_contract": "delegation_manager",
       "function_name": "completeQueuedWithdrawal",
       "function_selector": "0xe4cc3f90",

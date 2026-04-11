@@ -1,0 +1,25 @@
+{
+  "router": "0x3bFA4769FB09eefC5a80d6E87c3B9C650f7Ae48e",
+  "nfpm": "0x1238536071E1c677A632429e3655c799b22cDA52",
+  "quoter": "0xEd1f6473345F45b75F8179591dd5bA1888cf2FB3",
+  "action_overrides": {
+    "uniswap_swap": {
+      "function_selector": "0x04e45aaf",
+      "param_mapping": [
+        {
+          "name": "params",
+          "source": "struct",
+          "fields": [
+            {"name": "tokenIn", "source": "arg", "arg_key": "tokenIn", "coerce": "address"},
+            {"name": "tokenOut", "source": "arg", "arg_key": "tokenOut", "coerce": "address"},
+            {"name": "fee", "source": "arg", "arg_key": "fee", "coerce": "uint24"},
+            {"name": "recipient", "source": "arg", "arg_key": "recipient", "coerce": "address"},
+            {"name": "amountIn", "source": "arg", "arg_key": "amountIn", "coerce": "uint256"},
+            {"name": "amountOutMinimum", "source": "arg", "arg_key": "amountOutMinimum", "coerce": "uint256"},
+            {"name": "sqrtPriceLimitX96", "source": "arg", "arg_key": "sqrtPriceLimitX96", "coerce": "uint160"}
+          ]
+        }
+      ]
+    }
+  }
+}

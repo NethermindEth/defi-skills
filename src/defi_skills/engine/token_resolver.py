@@ -52,7 +52,7 @@ class TokenResolver:
                     shutil.copy2(SEED_CACHE_PATH, self.cache_path)
             else:
                 cache_filename = f"token_cache_{chain_id}.json"
-                self.cache_path = DATA_DIR / "cache" / cache_filename
+                self.cache_path = PACKAGE_DATA_DIR / "cache" / cache_filename
 
         # In-memory indexes
         self.erc20_by_symbol: Dict[str, Dict] = {}

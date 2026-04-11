@@ -1,17 +1,6 @@
 {
   "protocol": "aave_v3",
   "version": "1.0",
-  "chain_id": 1,
-  "contracts": {
-    "pool": {
-      "address": "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
-      "abi_source": "etherscan_cache"
-    },
-    "rewards_controller": {
-      "address": "0x8164Cc65827dcFe994AB23944CBC90e0aa80BfcB",
-      "abi_source": "etherscan_cache"
-    }
-  },
   "actions": {
     "aave_supply": {
       "description": "Supply asset to Aave V3 lending pool",
@@ -433,7 +422,7 @@
       "payload_args": {
         "assets": {
           "source": "resolve_aave_reward_assets",
-          "pool_address": "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2"
+          "pool_address": "$pool"
         },
         "human_readable_amount": {
           "source": "compute_human_readable",

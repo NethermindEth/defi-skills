@@ -29,6 +29,12 @@
       "decimals": 6,
       "symbol": "USDT",
       "name": "Tether USD"
+    },
+    "EURS": {
+      "address": "0x6d906e526a4e2Ca02097BA9d0caA3c382F52278E",
+      "decimals": 2,
+      "symbol": "EURS",
+      "name": "STASIS EURS"
     }
   },
   "erc721_collections": {}
