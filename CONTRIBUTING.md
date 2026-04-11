@@ -84,13 +84,11 @@ Remove `_review_notes` from the final JSON before committing.
 {
   "protocol": "my_protocol",
   "version": "1.0",
-  "chain_id": 1,
-  "contracts": {
-    "pool": { "address": "0x...", "abi_source": "etherscan_cache" }
-  },
   "actions": { ... }
 }
 ```
+
+Playbooks are **chain-agnostic**. They define action logic but not contract addresses. Addresses live in ChainResources (see [Multi-Chain Support](#multi-chain-support) below). Playbooks reference contracts by label (e.g. `"target_contract": "pool"`), and the engine resolves these labels at runtime from `data/chains/{chain_id}/{protocol}.json`.
 
 **Each action has:**
 
@@ -318,20 +316,100 @@ def test_myprotocol_swap(mock_get, engine):
     ...
 ```
 
-#### Step 9: Validate
+#### Step 9: Add chain resources
+
+For each chain the protocol supports, create `src/defi_skills/data/chains/{chain_id}/{protocol}.json`:
+
+```json
+{
+  "pool": "0x...",
+  "router": "0x..."
+}
+```
+
+Keys must match the labels used in the playbook (e.g., if the playbook says `"target_contract": "pool"`, the chain resource must have a `"pool"` key). Note: `$` prefixed references like `$asset` are used in `payload_args` kwargs (e.g. `decimals_from: "$asset"`), not in `target_contract`.
+
+For testnets or chains where the protocol uses a different ABI or different token addresses, add overrides:
+
+```json
+{
+  "pool": "0x...",
+  "token_overrides": {
+    "WETH": "0xTestWETH..."
+  },
+  "action_overrides": {
+    "my_action": {
+      "function_selector": "0x...",
+      "param_mapping": [...]
+    }
+  }
+}
+```
+
+- **`token_overrides`**: protocol-scoped token address remapping (e.g. Aave's test WETH on Sepolia)
+- **`action_overrides`**: per-action ABI overrides merged on top of the base playbook (e.g. Uniswap SwapRouter02 on Sepolia has a different selector and no deadline field)
+
+After adding chain resource files, fetch the ABIs for the new contract addresses:
 
 ```bash
-# Unit tests
-pytest tests/ -x -q
-
-# Build test (no RPC needed for basic actions)
-defi-skills build -a myprotocol_supply -A '{"asset":"USDC","amount":"500"}' -j
-
-# Simulation on Anvil fork (needs ALCHEMY_API_KEY + a whale address that holds the tokens)
-defi-skills simulate -a myprotocol_supply \
-  -A '{"asset":"USDC","amount":"500"}' \
-  -w 0xWHALE_ADDRESS -j
+export ETHERSCAN_API_KEY="..."
+python -m defi_skills.data.fetch_abis
 ```
+
+This scans all `data/chains/{chain_id}/{protocol}.json` files, fetches verified ABIs from Etherscan V2 (handles proxies and Diamond patterns automatically), caches them in `data/abi_cache/`, and verifies that every playbook action's function exists in the fetched ABI.
+
+#### Step 10: Validate
+
+**Unit tests:**
+```bash
+pytest tests/ -x -q
+```
+
+**Build test:**
+```bash
+defi-skills build -a myprotocol_supply -A '{"asset":"USDC","amount":"500"}' --chain-id 1 -j
+```
+
+**Fork validation (required before submitting PR):**
+
+See [docs/action-validation-guide.md](docs/action-validation-guide.md) for the full process. Summary:
+
+1. Start an Anvil fork: `anvil --fork-url "https://eth-mainnet.g.alchemy.com/v2/$ALCHEMY_API_KEY" --chain-id 1`
+2. Build with CLI: `defi-skills build -a myprotocol_supply -A '{"asset":"USDC","amount":"500"}' --chain-id 1 -w 0xf39F... -j`
+3. Execute with cast: `cast send <to> <calldata> --value <value>wei --private-key <anvil-pk> --rpc-url http://127.0.0.1:8545`
+4. Verify state change: `cast call <token> "balanceOf(address)(uint256)" <wallet> --rpc-url http://127.0.0.1:8545`
+5. Paste the output in your PR description
+
+### Multi-Chain Support
+
+The engine supports 6 chains: Ethereum Mainnet (1), Arbitrum (42161), Base (8453), Optimism (10), Polygon (137), and Sepolia (11155111).
+
+```
+Playbook (chain-agnostic)     →  action logic, $ references, param mappings
+ChainResources (per-chain)    →  contract addresses, action/token overrides
+TokenResolver (per-chain)     →  symbol → address + decimals via 1inch + Alchemy RPC
+```
+
+**Adding a protocol to a new chain:**
+
+1. Create `data/chains/{chain_id}/{protocol}.json` with the chain's contract addresses
+2. If the protocol uses different ABIs on this chain, add `action_overrides` (e.g. Uniswap SwapRouter02 on Base/Sepolia)
+3. If the protocol uses different token addresses (e.g. USDC.e on Polygon Compound, test tokens on Sepolia), add `token_overrides`
+4. Fetch ABIs: `python -m defi_skills.data.fetch_abis` (handles proxies automatically)
+5. Run fork validation on the new chain
+
+**Adding a completely new chain:**
+
+1. Register the chain in `src/defi_skills/engine/chains.py` (chain config with Alchemy slug, 1inch chain ID, native symbol, WETH address)
+2. Create `data/chains/{chain_id}/` with protocol resource files
+3. Fetch ABIs: `python -m defi_skills.data.fetch_abis`
+4. The `TokenResolver` automatically discovers tokens via 1inch API and Alchemy RPC -- no manual token cache needed (requires `ONEINCH_API_KEY` and `ALCHEMY_API_KEY` with the chain enabled)
+
+**Key rules:**
+- Playbooks never contain hardcoded addresses. Use `$` references.
+- Token caches are auto-populated by the resolver. If a protocol uses non-canonical tokens (e.g. USDC.e instead of native USDC), add `token_overrides` in the chain resource file.
+- `chain_agnostic: true` in a playbook means the action is available on all chains (e.g. ERC-20 transfers).
+- Polygon's native token is POL, not ETH. WETH wrap/unwrap is not available on Polygon.
 
 ### Common Patterns
 

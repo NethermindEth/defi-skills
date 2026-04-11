@@ -6,11 +6,12 @@ flowchart TB
     CHAT_CMD -->|"tool calls"| PBE
     BUILD_CMD -->|"{action, args}"| PBE
 
-    PBE["<b>PlaybookEngine</b>"]
+    PBE["<b>PlaybookEngine</b><br/>chain-aware · lazy per-chain resolvers"]
 
-    PBE -->|"1. resolve args"| BUILD
+    PBE -->|"1. resolve args<br/>(chain_id)"| BUILD
     BUILD -->|"ExecutablePayload"| ENCODE
     PBE -.->|"loads at init"| PB & REG
+    PBE -.->|"loads at runtime"| CHAINS
 
     subgraph STAGE ["Two-Stage Pipeline"]
         BUILD["<b>build_payload()</b><br/>iterate payload_args in order<br/>dispatch each to resolver by <i>source</i> field"]
@@ -29,9 +30,10 @@ flowchart TB
 
     subgraph DATA ["Data Layer: all local, no runtime fetches to populate"]
         direction LR
-        PB["<b>12 Playbook JSONs</b><br/>action specs · contracts<br/>param mappings · approvals"]
+        PB["<b>13 Playbook JSONs</b><br/>action specs · $ references<br/>param mappings · approvals<br/>chain-agnostic definitions"]
+        CHAINS["<b>ChainResources</b><br/>data/chains/{chain_id}/{protocol}.json<br/>per-chain contract addresses<br/>action_overrides · token_overrides"]
         ABI["<b>ABI Cache</b><br/>Etherscan-verified<br/>per-contract JSON"]
-        CACHE["<b>Token Cache</b><br/>symbol → address + decimals<br/>immutable on-chain data"]
+        CACHE["<b>Token Cache</b><br/>per-chain: symbol → address + decimals<br/>immutable on-chain data"]
         REG["<b>Registry</b><br/>governance-mutable<br/>overrides playbook values"]
     end
 
@@ -50,6 +52,8 @@ flowchart TB
     CACHE -.->|"cache miss tier 2"| INCH
     CACHE -.->|"cache miss tier 3"| RPC
     ABI -.->|"populated offline by fetch_abis"| ESCAN
+
+    BUILD -.->|"resolves $ refs"| CHAINS
 
     ENCODE --> OUT
 

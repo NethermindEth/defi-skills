@@ -1,17 +1,6 @@
 {
   "protocol": "uniswap_v3",
   "version": "1.0",
-  "chain_id": 1,
-  "contracts": {
-    "router": {
-      "address": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
-      "abi_source": "etherscan_cache"
-    },
-    "nfpm": {
-      "address": "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
-      "abi_source": "etherscan_cache"
-    }
-  },
   "actions": {
     "uniswap_swap": {
       "description": "Swap tokens via Uniswap V3 single-hop (exactInputSingle)",
@@ -107,7 +96,7 @@
         "amountOutMinimum": {
           "source": "resolve_uniswap_quote",
           "slippage_bps": 50,
-          "quoter_address": "0x61fFE014bA17989E743c5F6cB21bF9697530B21e"
+          "quoter_address": "$quoter"
         },
         "sqrtPriceLimitX96": {
           "source": "constant",
@@ -446,7 +435,7 @@
             "tokenId",
             "position_id"
           ],
-          "nfpm_address": "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
+          "nfpm_address": "$nfpm"
         },
         "tokenId": {
           "source": "llm_passthrough",
@@ -547,7 +536,7 @@
             "tokenId",
             "position_id"
           ],
-          "nfpm_address": "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
+          "nfpm_address": "$nfpm"
         },
         "tokenId": {
           "source": "llm_passthrough",

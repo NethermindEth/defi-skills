@@ -32,6 +32,26 @@ def resolve_token_address(value: str, ctx: ResolveContext, **kwargs) -> Optional
                 "Use WETH, or wrap first with weth_wrap."
             )
         s = eth_alias
+    # Check token_overrides first (chain/protocol-specific addresses)
+    override_addr = ctx.token_overrides.get(s.upper())
+    if override_addr:
+        if ctx.token_resolver:
+            info = ctx.token_resolver.resolve_by_address(override_addr)
+            if info:
+                ctx.decimals_cache[override_addr] = info["decimals"]
+                ctx.decimals_cache[s.upper()] = info["decimals"]
+                return override_addr
+            try:
+                info = ctx.token_resolver.query_on_chain(override_addr)
+                if info:
+                    ctx.decimals_cache[override_addr] = info["decimals"]
+                    ctx.decimals_cache[s.upper()] = info["decimals"]
+                    return override_addr
+            except Exception:
+                pass
+        ctx.decimals_cache[override_addr] = 18
+        ctx.decimals_cache[s.upper()] = 18
+        return override_addr
     if ctx.token_resolver:
         info = ctx.token_resolver.resolve_erc20(s)
         if info:

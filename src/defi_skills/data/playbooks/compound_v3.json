@@ -1,17 +1,6 @@
 {
   "protocol": "compound_v3",
   "version": "1.0",
-  "chain_id": 1,
-  "contracts": {
-    "comet_usdc": {
-      "address": "0xc3d688B66703497DAA19211EEdff47f25384cdc3",
-      "abi_source": "etherscan_cache"
-    },
-    "comet_rewards": {
-      "address": "0x1B0e765F6224C21223AeA2af16c1C46E38885a40",
-      "abi_source": "etherscan_cache"
-    }
-  },
   "actions": {
     "compound_supply": {
       "description": "Supply asset to Compound V3 (Comet USDC market)",
@@ -23,7 +12,9 @@
         "UNI",
         "LINK"
       ],
-      "registry_mapping": { "valid_tokens": "supply_tokens" },
+      "registry_mapping": {
+        "valid_tokens": "supply_tokens"
+      },
       "target_contract": "comet_usdc",
       "function_name": "supply",
       "function_selector": "0xf2b9fdb8",
@@ -86,7 +77,9 @@
         "UNI",
         "LINK"
       ],
-      "registry_mapping": { "valid_tokens": "supply_tokens" },
+      "registry_mapping": {
+        "valid_tokens": "supply_tokens"
+      },
       "target_contract": "comet_usdc",
       "function_name": "withdraw",
       "function_selector": "0xf3fef3a3",
@@ -137,7 +130,9 @@
       "valid_tokens": [
         "USDC"
       ],
-      "registry_mapping": { "valid_tokens": "borrow_tokens" },
+      "registry_mapping": {
+        "valid_tokens": "borrow_tokens"
+      },
       "target_contract": "comet_usdc",
       "function_name": "withdraw",
       "function_selector": "0xf3fef3a3",
@@ -188,7 +183,9 @@
       "valid_tokens": [
         "USDC"
       ],
-      "registry_mapping": { "valid_tokens": "borrow_tokens" },
+      "registry_mapping": {
+        "valid_tokens": "borrow_tokens"
+      },
       "target_contract": "comet_usdc",
       "function_name": "supply",
       "function_selector": "0xf2b9fdb8",

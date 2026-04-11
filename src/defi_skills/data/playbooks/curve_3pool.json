@@ -1,13 +1,6 @@
 {
   "protocol": "curve_3pool",
   "version": "1.0",
-  "chain_id": 1,
-  "contracts": {
-    "pool_3crv": {
-      "address": "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7",
-      "abi_source": "etherscan_cache"
-    }
-  },
   "actions": {
     "curve_add_liquidity": {
       "description": "Add single-sided liquidity to Curve 3pool",
@@ -64,7 +57,7 @@
         "min_mint_amount": {
           "source": "resolve_curve_min_mint",
           "slippage_bps": 50,
-          "pool_address": "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7"
+          "pool_address": "$pool_3crv"
         },
         "human_readable_amount": {
           "source": "compute_human_readable",
@@ -108,7 +101,7 @@
             "amount"
           ],
           "decimals_from": 18,
-          "balance_of": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"
+          "balance_of": "$lp_token"
         },
         "slippage": {
           "source": "llm_passthrough",
@@ -118,8 +111,8 @@
         "min_amounts": {
           "source": "resolve_curve_min_amounts",
           "slippage_bps": 50,
-          "pool_address": "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7",
-          "lp_token_address": "0x6c3F90f043a72FA612cbac8115EE7e52BDe6E490"
+          "pool_address": "$pool_3crv",
+          "lp_token_address": "$lp_token"
         },
         "human_readable_amount": {
           "source": "compute_human_readable",

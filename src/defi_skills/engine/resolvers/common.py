@@ -49,6 +49,7 @@ class ResolveContext:
     decimals_cache: Dict[str, int] = field(default_factory=dict)
     playbook_contracts: Dict[str, Any] = field(default_factory=dict)
     playbook_data: Dict[str, Any] = field(default_factory=dict)
+    token_overrides: Dict[str, str] = field(default_factory=dict)  # symbol -> address
 
     def get_decimals_for(self, key: str) -> int:
         if key in self.decimals_cache:
@@ -101,6 +102,12 @@ def resolve_decimals(spec: Any, ctx: ResolveContext, asset_sym: str = None) -> i
         if isinstance(sym, str) and not sym.startswith("0x"):
             if sym.upper() == "ETH":
                 return 18
+            # Check if resolve_token_address already cached decimals for
+            # this symbol (e.g. via token_overrides).  This must come
+            # before resolve_erc20 which only knows canonical tokens.
+            if sym.upper() in ctx.decimals_cache:
+                ctx.decimals_cache[ref_key] = ctx.decimals_cache[sym.upper()]
+                return ctx.decimals_cache[ref_key]
             if ctx.token_resolver:
                 info = ctx.token_resolver.resolve_erc20(sym)
                 if info:

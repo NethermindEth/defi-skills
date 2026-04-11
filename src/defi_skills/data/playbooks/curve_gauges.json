@@ -1,13 +1,6 @@
 {
   "protocol": "curve_gauges",
   "version": "1.0",
-  "chain_id": 1,
-  "contracts": {
-    "minter": {
-      "address": "0xd061D61a4d941c39E5453435B6345Dc261C2fcE0",
-      "abi_source": "etherscan_cache"
-    }
-  },
   "standard_abis": {
     "gauge_deposit": {
       "name": "deposit",

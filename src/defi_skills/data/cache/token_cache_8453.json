@@ -1,0 +1,17 @@
+{
+  "erc20_tokens": {
+    "WETH": {
+      "address": "0x4200000000000000000000000000000000000006",
+      "decimals": 18,
+      "symbol": "WETH",
+      "name": "Wrapped Ether"
+    },
+    "USDC": {
+      "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "decimals": 6,
+      "symbol": "USDC",
+      "name": "USD Coin"
+    }
+  },
+  "erc721_collections": {}
+}

@@ -1,8 +1,7 @@
 {
   "protocol": "transfers",
+  "chain_agnostic": true,
   "version": "1.0",
-  "chain_id": 1,
-  "contracts": {},
   "standard_abis": {
     "erc20_transfer": {
       "name": "transfer",
