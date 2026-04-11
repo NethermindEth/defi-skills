@@ -53,7 +53,7 @@ class PlaybookEngine:
     ):
         # Per-chain resolver caches. Passed-in resolvers seed the cache
         # (defaults to chain_id=1). For other chains, resolvers are created
-        # on demand by _get_token_resolver / _get_ens_resolver.
+        # on demand by get_token_resolver / get_ens_resolver.
         self._token_resolvers: Dict[int, Any] = {}  # chain_id -> TokenResolver
         self._ens_resolvers: Dict[int, Any] = {}     # chain_id -> ENSResolver
         if token_resolver:
@@ -104,7 +104,7 @@ class PlaybookEngine:
                     else:
                         spec[spec_key] = reg[reg_key]
 
-    def _get_token_resolver(self, chain_id: int):
+    def get_token_resolver(self, chain_id: int):
         """Get or create a TokenResolver for the given chain."""
         if chain_id in self._token_resolvers:
             return self._token_resolvers[chain_id]
@@ -113,7 +113,7 @@ class PlaybookEngine:
         self._token_resolvers[chain_id] = tr
         return tr
 
-    def _get_ens_resolver(self, chain_id: int):
+    def get_ens_resolver(self, chain_id: int):
         """Get or create an ENSResolver for the given chain."""
         if chain_id in self._ens_resolvers:
             return self._ens_resolvers[chain_id]
@@ -122,7 +122,7 @@ class PlaybookEngine:
         self._ens_resolvers[chain_id] = er
         return er
 
-    def _get_contracts(self, action: str, chain_id: int) -> Dict[str, Dict]:
+    def get_contracts(self, action: str, chain_id: int) -> Dict[str, Dict]:
         """Resolve contracts for an action on a specific chain via ChainResources."""
         pb = self.playbook_meta.get(action, {})
         protocol = pb.get("protocol", "")
@@ -133,13 +133,17 @@ class PlaybookEngine:
         except ValueError:
             return {}
 
-    def _action_available(self, action: str, chain_id: int) -> bool:
+    def action_available(self, action: str, chain_id: int) -> bool:
         """Check if an action is available on a chain.
 
-        Chain-agnostic playbooks (marked with "chain_agnostic": true) are
-        available everywhere. All other protocols require a chain contract
-        file at data/chains/{chain_id}/{protocol}.json.
+        Returns False for unregistered chain IDs. Chain-agnostic playbooks
+        (marked with "chain_agnostic": true) are available on all registered
+        chains. All other protocols require a chain contract file at
+        data/chains/{chain_id}/{protocol}.json.
         """
+        from defi_skills.engine.chains import CHAIN_REGISTRY
+        if chain_id not in CHAIN_REGISTRY:
+            return False
         pb = self.playbook_meta.get(action, {})
         protocol = pb.get("protocol", "")
         if not protocol:
@@ -163,7 +167,7 @@ class PlaybookEngine:
                 f"Unknown action: '{action}'. "
                 f"Use get_supported_actions() to list available actions."
             )
-        if not self._action_available(action, chain_id):
+        if not self.action_available(action, chain_id):
             protocol = self.playbook_meta.get(action, {}).get("protocol", "unknown")
             from defi_skills.engine.chain_resources import supported_chains_for_protocol
             supported = supported_chains_for_protocol(protocol)
@@ -179,7 +183,7 @@ class PlaybookEngine:
         args = llm_output.get("arguments") or {}
 
         # Resolve contracts from ChainResources at runtime
-        contracts = self._get_contracts(action, chain_id)
+        contracts = self.get_contracts(action, chain_id)
 
         # Apply chain-specific action overrides (e.g. different ABI on SwapRouter02)
         chain_action_overrides = contracts.get("action_overrides", {}).get(action, {})
@@ -190,8 +194,8 @@ class PlaybookEngine:
         token_overrides = contracts.get("token_overrides", {})
 
         ctx = ResolveContext(
-            token_resolver=self._get_token_resolver(chain_id),
-            ens_resolver=self._get_ens_resolver(chain_id),
+            token_resolver=self.get_token_resolver(chain_id),
+            ens_resolver=self.get_ens_resolver(chain_id),
             from_address=from_address,
             chain_id=chain_id,
             action=action,
@@ -451,7 +455,7 @@ class PlaybookEngine:
         action_spec = self.playbooks[action]
 
         # Apply chain-specific action overrides
-        contracts = self._get_contracts(action, chain_id)
+        contracts = self.get_contracts(action, chain_id)
         chain_action_overrides = contracts.get("action_overrides", {}).get(action, {})
         if chain_action_overrides:
             action_spec = {**action_spec, **chain_action_overrides}
@@ -702,12 +706,12 @@ class PlaybookEngine:
     def get_required_payload_args(self, chain_id: int = 1) -> Dict[str, List[str]]:
         result = {}
         for action_name, spec in self.playbooks.items():
-            if self._action_available(action_name, chain_id):
+            if self.action_available(action_name, chain_id):
                 result[action_name] = spec.get("required_payload_args", [])
         return result
 
     def get_supported_actions(self, chain_id: int = 1) -> List[str]:
-        return [a for a in self.playbooks if self._action_available(a, chain_id)]
+        return [a for a in self.playbooks if self.action_available(a, chain_id)]
 
     def get_actions_by_protocol(self, chain_id: int = 1) -> Dict[str, List[Dict]]:
         by_protocol = {}

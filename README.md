@@ -171,7 +171,7 @@ Key environment variables:
 
 ## Known Limitations
 
-- **6 chains**: Mainnet, Arbitrum, Base, Optimism, Polygon, and Sepolia. Adding new chains requires only data files, no code changes.
+- **6 chains**: Mainnet, Arbitrum, Base, Optimism, Polygon, and Sepolia. Adding a protocol to an existing chain requires only data files. Adding a new chain also requires registering it in `chains.py`.
 - **No gas estimation** -- the signing wallet handles gas and nonce.
 - **Single-hop swaps only** on Uniswap and Balancer.
 - **Static contract addresses** -- protocol upgrades require manual updates to chain resource files.

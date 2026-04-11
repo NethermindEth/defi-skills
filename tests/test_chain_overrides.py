@@ -133,7 +133,7 @@ class TestSepoliaIntegration:
         return PlaybookEngine()
 
     def test_sepolia_uniswap_swap_uses_router02_selector(self, engine):
-        contracts = engine._get_contracts("uniswap_swap", 11155111)
+        contracts = engine.get_contracts("uniswap_swap", 11155111)
         overrides = contracts.get("action_overrides", {}).get("uniswap_swap", {})
         assert overrides.get("function_selector") == "0x04e45aaf"
         pm = overrides.get("param_mapping", [{}])[0]
@@ -142,17 +142,17 @@ class TestSepoliaIntegration:
         assert len(field_names) == 7
 
     def test_sepolia_aave_has_token_overrides(self, engine):
-        contracts = engine._get_contracts("aave_supply", 11155111)
+        contracts = engine.get_contracts("aave_supply", 11155111)
         overrides = contracts.get("token_overrides", {})
         assert overrides.get("WETH") == "0xC558DBdd856501FCd9aaF1E62eae57A9F0629a3c"
         assert overrides.get("LINK") == "0xf8Fb3713D459D7C1018BD0A49D19b4C44290EBE5"
 
     def test_mainnet_uniswap_no_overrides(self, engine):
-        contracts = engine._get_contracts("uniswap_swap", 1)
+        contracts = engine.get_contracts("uniswap_swap", 1)
         assert "action_overrides" not in contracts
 
     def test_mainnet_aave_no_token_overrides(self, engine):
-        contracts = engine._get_contracts("aave_supply", 1)
+        contracts = engine.get_contracts("aave_supply", 1)
         assert "token_overrides" not in contracts
 
     def test_mainnet_swap_uses_original_selector(self, engine):

@@ -352,7 +352,7 @@ def config_setup():
 @click.argument("action_name", required=False)
 @click.option("--json", "-j", "json_output", is_flag=True, help="Output raw JSON.")
 @click.option("--chain-id", "-c", "chain_id", type=int, default=1,
-              help="Chain ID (1=mainnet, 11155111=sepolia)")
+              help="Chain ID (1=mainnet, 42161=arbitrum, 8453=base, 10=optimism, 137=polygon, 11155111=sepolia)")
 def actions(action_name, json_output, chain_id):
     """List supported actions, or show details for a specific action.
 
@@ -372,7 +372,7 @@ def actions(action_name, json_output, chain_id):
             click.echo(f"Run 'defi-skills actions' to see all supported actions.", err=True)
             raise SystemExit(1)
 
-        if not engine._action_available(action_name, chain_id):
+        if not engine.action_available(action_name, chain_id):
             click.echo(f"{RED}Action '{action_name}' is not available on chain {chain_id}.{RESET}", err=True)
             click.echo(f"Run 'defi-skills actions --chain-id {chain_id}' to see available actions.", err=True)
             raise SystemExit(1)
@@ -433,7 +433,7 @@ def actions(action_name, json_output, chain_id):
 @click.option("--json", "-j", "json_output", is_flag=True, help="Output raw JSON.")
 @click.option("--wallet", "-w", default=None, help="Override wallet address.")
 @click.option("--chain-id", "-c", "chain_id", type=int, default=1,
-              help="Chain ID (1=mainnet, 11155111=sepolia)")
+              help="Chain ID (1=mainnet, 42161=arbitrum, 8453=base, 10=optimism, 137=polygon, 11155111=sepolia)")
 def build(action_name, args_json, json_output, wallet, chain_id):
     """Build an unsigned Ethereum transaction (deterministic, no LLM).
 
@@ -479,7 +479,7 @@ def build(action_name, args_json, json_output, wallet, chain_id):
 @click.option("--wallet", "-w", default=None, help="Override wallet address.")
 @click.option("--stream/--no-stream", default=None, help="Stream text live (raw) or wait for formatted output.")
 @click.option("--chain-id", "-c", "chain_id", type=int, default=1,
-              help="Chain ID (1=mainnet, 11155111=sepolia)")
+              help="Chain ID (1=mainnet, 42161=arbitrum, 8453=base, 10=optimism, 137=polygon, 11155111=sepolia)")
 def chat(model, wallet, stream, chain_id):
     """Interactive DeFi transaction assistant (uses LLM with tool calling).
 
@@ -515,7 +515,7 @@ def chat(model, wallet, stream, chain_id):
 @click.option("--json", "-j", "json_output", is_flag=True, help="Output raw JSON.")
 @click.option("--wallet", "-w", default=None, help="Override wallet address.")
 @click.option("--chain-id", "-c", "chain_id", type=int, default=1,
-              help="Chain ID (1=mainnet, 11155111=sepolia)")
+              help="Chain ID (1=mainnet, 42161=arbitrum, 8453=base, 10=optimism, 137=polygon, 11155111=sepolia)")
 def simulate(action_name, args_json, multi_step_json, json_output, wallet, chain_id):
     """Build and simulate transactions on a local Anvil fork.
 

@@ -396,6 +396,10 @@ a:hover { text-decoration: underline; }
     <div style="display:flex;align-items:center;gap:8px;">
       <select id="chain-select" class="btn btn-ghost btn-sm" style="font-family:var(--mono);font-size:12px;background:var(--bg-2);color:var(--text-1);border:1px solid var(--border-0);border-radius:var(--radius-sm);padding:4px 8px;cursor:pointer;" onchange="handleChainSwitch(this.value)">
         <option value="1">Mainnet</option>
+        <option value="42161">Arbitrum</option>
+        <option value="8453">Base</option>
+        <option value="10">Optimism</option>
+        <option value="137">Polygon</option>
         <option value="11155111">Sepolia</option>
       </select>
       <button id="btn-connect" class="btn btn-accent btn-sm" onclick="handleConnect()" aria-label="Connect wallet">
@@ -467,8 +471,8 @@ const agent = new DeFiAgent('');
 let isProcessing = false;
 const chatEl = $('chat');
 const chatScroll = $('chat-scroll');
-const CHAIN_NAMES = { 1: 'mainnet', 11155111: 'sepolia' };
-const SUPPORTED_CHAINS = { 1: 'Mainnet', 11155111: 'Sepolia' };
+const CHAIN_NAMES = { 1: 'mainnet', 42161: 'arbitrum', 8453: 'base', 10: 'optimism', 137: 'polygon', 11155111: 'sepolia' };
+const SUPPORTED_CHAINS = { 1: 'Mainnet', 42161: 'Arbitrum', 8453: 'Base', 10: 'Optimism', 137: 'Polygon', 11155111: 'Sepolia' };
 
 // ── Helpers ──
 function scrollDown() { requestAnimationFrame(() => { chatScroll.scrollTop = chatScroll.scrollHeight; }); }
@@ -609,8 +613,16 @@ function updateTxCard(container, index, status, detail) {
 }
 
 function getExplorerUrl(txHash) {
-  if (agent.chainId === 11155111) return 'https://sepolia.etherscan.io/tx/' + txHash;
-  return 'https://etherscan.io/tx/' + txHash;
+  const explorers = {
+    1: 'https://etherscan.io',
+    42161: 'https://arbiscan.io',
+    8453: 'https://basescan.org',
+    10: 'https://optimistic.etherscan.io',
+    137: 'https://polygonscan.com',
+    11155111: 'https://sepolia.etherscan.io',
+  };
+  const base = explorers[agent.chainId] || 'https://etherscan.io';
+  return base + '/tx/' + txHash;
 }
 
 // ── Sign Flow ──

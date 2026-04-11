@@ -88,7 +88,7 @@ Remove `_review_notes` from the final JSON before committing.
 }
 ```
 
-Playbooks are **chain-agnostic**. They define action logic but not contract addresses. Addresses live in ChainResources (see [Multi-Chain Support](#multi-chain-support) below). Playbooks reference contracts using `$` prefixed keys (e.g. `$pool`, `$router`) which are resolved at runtime from `data/chains/{chain_id}/{protocol}.json`.
+Playbooks are **chain-agnostic**. They define action logic but not contract addresses. Addresses live in ChainResources (see [Multi-Chain Support](#multi-chain-support) below). Playbooks reference contracts by label (e.g. `"target_contract": "pool"`), and the engine resolves these labels at runtime from `data/chains/{chain_id}/{protocol}.json`.
 
 **Each action has:**
 
@@ -327,7 +327,7 @@ For each chain the protocol supports, create `src/defi_skills/data/chains/{chain
 }
 ```
 
-Keys must match the `$` references used in the playbook (e.g., if the playbook says `"target_contract": "$pool"`, the chain resource must have a `"pool"` key).
+Keys must match the labels used in the playbook (e.g., if the playbook says `"target_contract": "pool"`, the chain resource must have a `"pool"` key). Note: `$` prefixed references like `$asset` are used in `payload_args` kwargs (e.g. `decimals_from: "$asset"`), not in `target_contract`.
 
 For testnets or chains where the protocol uses a different ABI or different token addresses, add overrides:
 

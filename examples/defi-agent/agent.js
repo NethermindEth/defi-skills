@@ -13,6 +13,32 @@ const TOKENS_BY_CHAIN = {
     '0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84': { symbol: 'stETH', decimals: 18 },
     '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0': { symbol: 'wstETH', decimals: 18 },
   },
+  42161: {
+    '0xaf88d065e77c8cC2239327C5EDb3A432268e5831': { symbol: 'USDC', decimals: 6 },
+    '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9': { symbol: 'USDT', decimals: 6 },
+    '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1': { symbol: 'DAI', decimals: 18 },
+    '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1': { symbol: 'WETH', decimals: 18 },
+    '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f': { symbol: 'WBTC', decimals: 8 },
+  },
+  8453: {
+    '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913': { symbol: 'USDC', decimals: 6 },
+    '0x4200000000000000000000000000000000000006': { symbol: 'WETH', decimals: 18 },
+    '0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb': { symbol: 'DAI', decimals: 18 },
+  },
+  10: {
+    '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85': { symbol: 'USDC', decimals: 6 },
+    '0x94b008aA00579c1307B0EF2c499aD98a8ce58e58': { symbol: 'USDT', decimals: 6 },
+    '0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1': { symbol: 'DAI', decimals: 18 },
+    '0x4200000000000000000000000000000000000006': { symbol: 'WETH', decimals: 18 },
+    '0x68f180fcCe6836688e9084f035309E29Bf0A2095': { symbol: 'WBTC', decimals: 8 },
+  },
+  137: {
+    '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359': { symbol: 'USDC', decimals: 6 },
+    '0xc2132D05D31c914a87C6611C10748AEb04B58e8F': { symbol: 'USDT', decimals: 6 },
+    '0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063': { symbol: 'DAI', decimals: 18 },
+    '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619': { symbol: 'WETH', decimals: 18 },
+    '0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6': { symbol: 'WBTC', decimals: 8 },
+  },
   11155111: {
     '0x94a9D9AC8a22534E3FaCa9F4e7F2E2cf85d5E4C8': { symbol: 'USDC', decimals: 6 },
     '0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0': { symbol: 'USDT', decimals: 6 },
@@ -48,6 +74,38 @@ class DeFiAgent {
 
   async switchChain(chainId) {
     if (!window.ethereum) return;
+    const CHAIN_PARAMS = {
+      42161: {
+        chainId: '0xa4b1', chainName: 'Arbitrum One',
+        rpcUrls: ['https://arb1.arbitrum.io/rpc'],
+        nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+        blockExplorerUrls: ['https://arbiscan.io'],
+      },
+      8453: {
+        chainId: '0x2105', chainName: 'Base',
+        rpcUrls: ['https://mainnet.base.org'],
+        nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+        blockExplorerUrls: ['https://basescan.org'],
+      },
+      10: {
+        chainId: '0xa', chainName: 'OP Mainnet',
+        rpcUrls: ['https://mainnet.optimism.io'],
+        nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+        blockExplorerUrls: ['https://optimistic.etherscan.io'],
+      },
+      137: {
+        chainId: '0x89', chainName: 'Polygon',
+        rpcUrls: ['https://polygon-rpc.com'],
+        nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+        blockExplorerUrls: ['https://polygonscan.com'],
+      },
+      11155111: {
+        chainId: '0xaa36a7', chainName: 'Sepolia',
+        rpcUrls: ['https://rpc.sepolia.org'],
+        nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+        blockExplorerUrls: ['https://sepolia.etherscan.io'],
+      },
+    };
     try {
       await window.ethereum.request({
         method: 'wallet_switchEthereumChain',
@@ -55,15 +113,10 @@ class DeFiAgent {
       });
       this.chainId = chainId;
     } catch (err) {
-      if (err.code === 4902 && chainId === 11155111) {
+      if (err.code === 4902 && CHAIN_PARAMS[chainId]) {
         await window.ethereum.request({
           method: 'wallet_addEthereumChain',
-          params: [{
-            chainId: '0xaa36a7', chainName: 'Sepolia',
-            rpcUrls: ['https://rpc.sepolia.org'],
-            nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
-            blockExplorerUrls: ['https://sepolia.etherscan.io'],
-          }],
+          params: [CHAIN_PARAMS[chainId]],
         });
         this.chainId = chainId;
       } else {
@@ -75,12 +128,13 @@ class DeFiAgent {
   async readBalances() {
     if (!this.wallet) return {};
     const balances = {};
-    const tokens = TOKENS_BY_CHAIN[this.chainId] || TOKENS_BY_CHAIN[1];
+    const tokens = TOKENS_BY_CHAIN[this.chainId] || {};
+    const nativeSymbol = this.chainId === 137 ? 'POL' : 'ETH';
 
     const ethHex = await window.ethereum.request({
       method: 'eth_getBalance', params: [this.wallet, 'latest'],
     });
-    balances.ETH = formatBalance(ethHex, 18);
+    balances[nativeSymbol] = formatBalance(ethHex, 18);
 
     const paddedAddr = '0x' + this.wallet.slice(2).toLowerCase().padStart(64, '0');
     const callData = BALANCE_OF_SELECTOR + paddedAddr.slice(2);
