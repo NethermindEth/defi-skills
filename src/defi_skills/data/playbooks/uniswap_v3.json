@@ -32,16 +32,14 @@
           "llm_field": "asset_in",
           "fallback_llm_fields": [
             "path[0]"
-          ],
-          "eth_alias": "WETH"
+          ]
         },
         "tokenOut": {
           "source": "resolve_token_address",
           "llm_field": "asset_out",
           "fallback_llm_fields": [
             "path[-1]"
-          ],
-          "eth_alias": "WETH"
+          ]
         },
         "fee": {
           "source": "resolve_fee_tier",
@@ -198,13 +196,11 @@
       "payload_args": {
         "__tokenA_address": {
           "source": "resolve_token_address",
-          "llm_field": "asset_a",
-          "eth_alias": "WETH"
+          "llm_field": "asset_a"
         },
         "__tokenB_address": {
           "source": "resolve_token_address",
-          "llm_field": "asset_b",
-          "eth_alias": "WETH"
+          "llm_field": "asset_b"
         },
         "fee": {
           "source": "resolve_fee_tier",

@@ -299,6 +299,11 @@ TEST_CASES = [
          "args": {"tokenIn": WETH_ADDR, "tokenOut": USDC_ADDR, "amountIn": "1000000000000000000", "fee": 500, "recipient": FROM_ADDRESS}},
         id="uniswap_swap_nonnumeric_slippage_uses_default",
     ),
+    pytest.param(
+        {"action": "uniswap_swap", "arguments": {"asset_in": "ETH", "asset_out": "USDC", "amount": "1"}},
+        {"should_raise": "ETH \\(native\\) is not supported"},
+        id="uniswap_swap_eth_rejected",
+    ),
     # ── Curve 3pool ──
     pytest.param(
         {"action": "curve_add_liquidity", "arguments": {"asset": "USDC", "amount": "100"}},
@@ -395,6 +400,11 @@ TEST_CASES = [
          "args": {"__token_in_address": WETH_ADDR, "__token_out_address": USDC_ADDR,
                   "amount": "1000000000000000000", "recipient": FROM_ADDRESS, "sender": FROM_ADDRESS}},
         id="balancer_swap",
+    ),
+    pytest.param(
+        {"action": "balancer_swap", "arguments": {"asset_in": "ETH", "asset_out": "USDC", "amount": "1"}},
+        {"should_raise": "ETH \\(native\\) is not supported"},
+        id="balancer_swap_eth_rejected",
     ),
     # ── Aave V3 extras ──
     pytest.param(
