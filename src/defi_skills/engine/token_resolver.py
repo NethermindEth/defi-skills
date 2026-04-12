@@ -38,11 +38,14 @@ class TokenResolver:
         from defi_skills.engine.chains import get_chain_config, get_rpc_url
 
         self.chain_id = chain_id
-        self.chain_config = get_chain_config(chain_id)
+        self.chain_config = get_chain_config(chain_id)  # raises ValueError for unknown chains
 
         # Per-chain cache path
         if cache_path:
-            self.cache_path = Path(cache_path)
+            resolved = Path(cache_path).resolve()
+            if ".." in resolved.parts:
+                raise ValueError(f"Invalid cache_path: {cache_path}")
+            self.cache_path = resolved
         else:
             if chain_id == 1:
                 self.cache_path = _default_cache_path()
@@ -51,8 +54,11 @@ class TokenResolver:
                     self.cache_path.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(SEED_CACHE_PATH, self.cache_path)
             else:
-                cache_filename = f"token_cache_{chain_id}.json"
-                self.cache_path = PACKAGE_DATA_DIR / "cache" / cache_filename
+                # chain_id is validated by get_chain_config above;
+                # explicit int cast ensures the filename is safe for path construction.
+                safe_id = int(chain_id)
+                cache_filename = f"token_cache_{safe_id}.json"
+                self.cache_path = (PACKAGE_DATA_DIR / "cache" / cache_filename).resolve()
 
         # In-memory indexes
         self.erc20_by_symbol: Dict[str, Dict] = {}

@@ -21,9 +21,10 @@ _SECRET_PARAM_RE = re.compile(r'(api[_-]?key=)[A-Za-z0-9_-]+', re.IGNORECASE)
 
 
 def sanitize_error(msg: str) -> str:
-    """Strip API keys/secrets from error messages before logging."""
+    """Strip API keys/secrets and control characters from error messages before logging."""
     msg = _SECRET_URL_RE.sub(r'\1***', msg)
     msg = _SECRET_PARAM_RE.sub(r'\1***', msg)
+    msg = msg.replace('\n', ' ').replace('\r', ' ')
     return msg
 
 

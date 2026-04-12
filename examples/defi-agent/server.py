@@ -553,8 +553,9 @@ def build(req: BuildRequest):
     llm_output = {"action": req.action, "arguments": req.arguments}
     result = engine.build_transactions(llm_output, chain_id=req.chain_id, from_address=req.from_address)
     if not result.get("success"):
-        raise HTTPException(422, result.get("error", "Build failed"))
-    return result
+        error_msg = result.get("error", "Build failed")
+        raise HTTPException(422, detail=error_msg)
+    return {"success": True, "transactions": result.get("transactions", [])}
 
 
 # ---------------------------------------------------------------------------

@@ -13,12 +13,20 @@ from defi_skills.engine.chains import CHAIN_REGISTRY
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 CHAINS_DIR = DATA_DIR / "chains"
+_CHAINS_DIR_RESOLVED = CHAINS_DIR.resolve()
 
 _cache: Dict[tuple, Dict[str, Dict]] = {}
 
 
 def _chain_file(chain_id: int, protocol: str) -> Path:
-    return CHAINS_DIR / str(chain_id) / f"{protocol}.json"
+    """Build path to a chain resource file, with path traversal protection."""
+    safe_id = int(chain_id)
+    if "/" in protocol or "\\" in protocol or ".." in protocol or not protocol:
+        raise ValueError(f"Invalid protocol name: {protocol!r}")
+    path = (CHAINS_DIR / str(safe_id) / f"{protocol}.json").resolve()
+    if not path.is_relative_to(_CHAINS_DIR_RESOLVED):
+        raise ValueError(f"Invalid path for chain_id={chain_id}, protocol={protocol!r}")
+    return path
 
 
 def load_chain_contracts(chain_id: int, protocol: str) -> Dict[str, Dict]:
@@ -83,7 +91,10 @@ def supported_chains_for_protocol(protocol: str) -> List[int]:
 
 def get_supported_protocols(chain_id: int) -> List[str]:
     """Return all protocols available on a given chain."""
-    chain_dir = CHAINS_DIR / str(chain_id)
+    safe_id = int(chain_id)
+    chain_dir = (CHAINS_DIR / str(safe_id)).resolve()
+    if not chain_dir.is_relative_to(_CHAINS_DIR_RESOLVED):
+        return []
     if not chain_dir.exists():
         return []
     return sorted(p.stem for p in chain_dir.glob("*.json"))

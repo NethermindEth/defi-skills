@@ -230,8 +230,10 @@ class PlaybookEngine:
                 resolved_value = self.resolve_payload_arg(arg_name, arg_spec, ctx, playbook)
             except (ValueError, KeyError) as e:
                 sanitized = sanitize_error(str(e))
-                logger.error(f"build_payload: resolver failed for '{arg_name}' in '{action}': {sanitized}")
-                raise ValueError(f"Failed to resolve '{arg_name}': {sanitized}") from e
+                safe_arg = sanitize_error(arg_name)
+                safe_action = sanitize_error(action)
+                logger.error(f"build_payload: resolver failed for '{safe_arg}' in '{safe_action}': {sanitized}")
+                raise ValueError(f"Failed to resolve '{safe_arg}': {sanitized}") from e
             ctx.resolved[arg_name] = resolved_value
 
         # Validate that all required payload args resolved to non-None values.
@@ -506,7 +508,7 @@ class PlaybookEngine:
         try:
             data = encode_from_abi(abi_entry, values)
         except Exception as e:
-            logger.error(f"encode_tx: ABI encoding failed for '{action}' ({function_name}): {sanitize_error(str(e))}")
+            logger.error(f"encode_tx: ABI encoding failed for '{sanitize_error(action)}' ({sanitize_error(function_name)}): {sanitize_error(str(e))}")
             return None
 
         # Target address
@@ -764,15 +766,15 @@ class PlaybookEngine:
         try:
             payload = self.build_payload(llm_output, chain_id=chain_id, from_address=from_address)
         except (ValueError, KeyError) as e:
-            return {"success": False, "error": f"Failed to resolve arguments: {e}"}
+            return {"success": False, "error": f"Failed to resolve arguments: {sanitize_error(str(e))}"}
 
         if payload is None:
-            return {"success": False, "error": f"Failed to build payload for '{action}'. Check arguments."}
+            return {"success": False, "error": f"Failed to build payload for '{sanitize_error(action)}'. Check arguments."}
 
         try:
             raw_tx = self.encode_tx(payload, from_address)
         except Exception as e:
-            return {"success": False, "error": f"Failed to encode transaction: {e}"}
+            return {"success": False, "error": f"Failed to encode transaction: {sanitize_error(str(e))}"}
 
         if raw_tx is None:
             return {"success": False, "error": f"Failed to encode transaction for '{action}'."}

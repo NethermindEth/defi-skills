@@ -108,7 +108,9 @@ def populate_erc721(resolver: TokenResolver, dry_run: bool = False) -> int:
         info = resolver.search_nft_collection(query)
         if info:
             resolver.add_collection(info)
-            print(f"  ADDED   {query:30s} {info['address'][:14]}... ({info.get('symbol', '')})")
+            addr = str(info['address'])[:14]
+            sym = str(info.get('symbol', ''))
+            print(f"  ADDED   {query:30s} {addr}... ({sym})")
             cached += 1
         else:
             # Try direct metadata query if we know the address won't help here
