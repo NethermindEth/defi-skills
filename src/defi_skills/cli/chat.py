@@ -115,7 +115,7 @@ TOOLS = [
         "function": {
             "name": "build_transaction",
             "description": (
-                "Build an unsigned Ethereum transaction for a single action. "
+                "Build an unsigned DeFi transaction for a single action. "
                 "IMPORTANT: You MUST call action_info first to get the exact parameter names. "
                 "All parameters go inside the 'args' object using the field names from action_info. "
                 "Example: build_transaction(action='lido_stake', args={'amount': '1'}) or "
@@ -164,7 +164,7 @@ def build_system_prompt(engine, chain_id=1):
     if not chain.ens_supported:
         ens_note = f"\n- ENS names (*.eth) are NOT available on {chain.name}. Always use hex addresses (0x...)."
 
-    return f"""You are a DeFi transaction assistant for {chain.name}. You help users build unsigned Ethereum transactions.
+    return f"""You are a DeFi transaction assistant for {chain.name}. You help users build unsigned DeFi transactions.
 
 ## Your Role
 You understand the user's intent, plan multi-step operations, and use your tools to build transactions. You never sign or broadcast. You only produce unsigned payloads (to, value, data).

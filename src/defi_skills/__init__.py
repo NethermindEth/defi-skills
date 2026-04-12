@@ -1,4 +1,4 @@
-"""defi-skills — translate natural language into Ethereum transactions."""
+"""defi-skills — translate natural language into DeFi transactions."""
 
 from importlib.metadata import version, PackageNotFoundError
 

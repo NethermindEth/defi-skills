@@ -1,4 +1,4 @@
-"""defi-skills CLI — translate natural language into Ethereum transactions."""
+"""defi-skills CLI — translate natural language into DeFi transactions."""
 
 import json
 
@@ -193,7 +193,7 @@ def get_action_params(spec):
 @click.group()
 @click.version_option(version=__version__, prog_name="defi-skills")
 def main():
-    """defi-skills — translate natural language into Ethereum transactions."""
+    """defi-skills — translate natural language into DeFi transactions."""
     load_dotenv()
     cfg.inject_config_env()
 
@@ -435,7 +435,7 @@ def actions(action_name, json_output, chain_id):
 @click.option("--chain-id", "-c", "chain_id", type=int, default=1,
               help="Chain ID (1=mainnet, 42161=arbitrum, 8453=base, 10=optimism, 137=polygon, 11155111=sepolia)")
 def build(action_name, args_json, json_output, wallet, chain_id):
-    """Build an unsigned Ethereum transaction (deterministic, no LLM).
+    """Build an unsigned DeFi transaction (deterministic, no LLM).
 
     \b
     Examples:

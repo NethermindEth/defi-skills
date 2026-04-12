@@ -26,7 +26,7 @@ A fully working DeFi agent built on the [defi-skills](../../README.md) engine. T
 
 ## How It Works
 
-1. **Connect wallet**:MetaMask or Rabby (Ethereum Mainnet)
+1. **Connect wallet**: MetaMask or Rabby (any supported chain)
 2. **Read portfolio**:agent fetches your ETH + ERC-20 balances
 3. **Type intent**:"Stake 10 ETH on Lido", "Swap 500 USDC for WETH"
 4. **Agent builds plan**:one LLM call parses intent, engine builds unsigned txs
