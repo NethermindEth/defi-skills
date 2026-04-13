@@ -28,13 +28,11 @@
       "payload_args": {
         "__token_in_address": {
           "source": "resolve_token_address",
-          "llm_field": "asset_in",
-          "eth_alias": "WETH"
+          "llm_field": "asset_in"
         },
         "__token_out_address": {
           "source": "resolve_token_address",
-          "llm_field": "asset_out",
-          "eth_alias": "WETH"
+          "llm_field": "asset_out"
         },
         "poolId": {
           "source": "resolve_balancer_pool_id",
@@ -194,16 +192,14 @@
       "payload_args": {
         "__token_in_address": {
           "source": "resolve_token_address",
-          "llm_field": "asset",
-          "eth_alias": "WETH"
+          "llm_field": "asset"
         },
         "__token_out_address": {
           "source": "resolve_token_address",
           "llm_field": "asset_b",
           "fallback_llm_fields": [
             "pool_token"
-          ],
-          "eth_alias": "WETH"
+          ]
         },
         "poolId": {
           "source": "resolve_balancer_pool_id",
@@ -315,16 +311,14 @@
       "payload_args": {
         "__token_out_address": {
           "source": "resolve_token_address",
-          "llm_field": "asset",
-          "eth_alias": "WETH"
+          "llm_field": "asset"
         },
         "__token_in_address": {
           "source": "resolve_token_address",
           "llm_field": "asset_b",
           "fallback_llm_fields": [
             "pool_token"
-          ],
-          "eth_alias": "WETH"
+          ]
         },
         "poolId": {
           "source": "resolve_balancer_pool_id",

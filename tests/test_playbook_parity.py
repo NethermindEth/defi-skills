@@ -299,6 +299,11 @@ TEST_CASES = [
          "args": {"tokenIn": WETH_ADDR, "tokenOut": USDC_ADDR, "amountIn": "1000000000000000000", "fee": 500, "recipient": FROM_ADDRESS}},
         id="uniswap_swap_nonnumeric_slippage_uses_default",
     ),
+    pytest.param(
+        {"action": "uniswap_swap", "arguments": {"asset_in": "ETH", "asset_out": "USDC", "amount": "1"}},
+        {"should_raise": "ETH \\(native\\) is not supported"},
+        id="uniswap_swap_eth_rejected",
+    ),
     # ── Curve 3pool ──
     pytest.param(
         {"action": "curve_add_liquidity", "arguments": {"asset": "USDC", "amount": "100"}},
@@ -396,6 +401,11 @@ TEST_CASES = [
                   "amount": "1000000000000000000", "recipient": FROM_ADDRESS, "sender": FROM_ADDRESS}},
         id="balancer_swap",
     ),
+    pytest.param(
+        {"action": "balancer_swap", "arguments": {"asset_in": "ETH", "asset_out": "USDC", "amount": "1"}},
+        {"should_raise": "ETH \\(native\\) is not supported"},
+        id="balancer_swap_eth_rejected",
+    ),
     # ── Aave V3 extras ──
     pytest.param(
         {"action": "aave_set_collateral", "arguments": {"asset": "WETH", "useAsCollateral": True}},
@@ -482,6 +492,11 @@ TEST_CASES = [
         {"action": "uniswap_lp_mint", "arguments": {"asset_a": "USDC", "asset_b": "WETH", "amount_a": "3000", "amount_b": "1"}},
         {"action": "uniswap_lp_mint", "function_name": "mint", "target_contract": NFPM, "selector": "0x88316456"},
         id="uniswap_lp_mint",
+    ),
+    pytest.param(
+        {"action": "uniswap_lp_mint", "arguments": {"asset_a": "ETH", "asset_b": "USDC", "amount_a": "1", "amount_b": "3000"}},
+        {"should_raise": "ETH \\(native\\) is not supported"},
+        id="uniswap_lp_mint_eth_rejected",
     ),
     pytest.param(
         {"action": "uniswap_lp_collect", "arguments": {"token_id": "12345"}},
