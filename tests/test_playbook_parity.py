@@ -494,6 +494,11 @@ TEST_CASES = [
         id="uniswap_lp_mint",
     ),
     pytest.param(
+        {"action": "uniswap_lp_mint", "arguments": {"asset_a": "ETH", "asset_b": "USDC", "amount_a": "1", "amount_b": "3000"}},
+        {"should_raise": "ETH \\(native\\) is not supported"},
+        id="uniswap_lp_mint_eth_rejected",
+    ),
+    pytest.param(
         {"action": "uniswap_lp_collect", "arguments": {"token_id": "12345"}},
         {"action": "uniswap_lp_collect", "function_name": "collect", "target_contract": NFPM,
          "selector": "0xfc6f7865", "args": {"tokenId": "12345", "recipient": FROM_ADDRESS}},
