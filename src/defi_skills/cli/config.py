@@ -14,6 +14,7 @@ API_KEY_FIELDS = {
     "alchemy_api_key": "ALCHEMY_API_KEY",
     "etherscan_api_key": "ETHERSCAN_API_KEY",
     "oneinch_api_key": "ONEINCH_API_KEY",
+    "thegraph_api_key": "THEGRAPH_API_KEY",
 }
 
 ENV_FALLBACK = {
