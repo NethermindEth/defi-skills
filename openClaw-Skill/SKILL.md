@@ -10,8 +10,12 @@ metadata:
         - defi-skills
       env:
         - WALLET_ADDRESS
+        - ALCHEMY_API_KEY
+        - THEGRAPH_API_KEY
     primaryEnv: WALLET_ADDRESS
     homepage: https://defi-skills.nethermind.io/
+    source: https://github.com/NethermindEth/defi-skills
+    install: "pip install --upgrade defi-skills --extra-index-url https://nethermind.jfrog.io/artifactory/api/pypi/kyoto-pypi-local-prod/simple"
 ---
 
 # Intent to Transaction
