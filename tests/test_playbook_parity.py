@@ -293,6 +293,12 @@ TEST_CASES = [
         {"should_raise": "Slippage of 0%"},
         id="uniswap_swap_zero_slippage_rejected",
     ),
+    pytest.param(
+        {"action": "uniswap_swap", "arguments": {"asset_in": "WETH", "asset_out": "USDC", "amount": "1", "slippage": "high"}},
+        {"action": "uniswap_swap", "function_name": "exactInputSingle", "target_contract": UNISWAP_ROUTER,
+         "args": {"tokenIn": WETH_ADDR, "tokenOut": USDC_ADDR, "amountIn": "1000000000000000000", "fee": 500, "recipient": FROM_ADDRESS}},
+        id="uniswap_swap_nonnumeric_slippage_uses_default",
+    ),
     # ── Curve 3pool ──
     pytest.param(
         {"action": "curve_add_liquidity", "arguments": {"asset": "USDC", "amount": "100"}},

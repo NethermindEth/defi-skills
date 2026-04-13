@@ -140,6 +140,9 @@ def resolve_slippage_bps(ctx: ResolveContext, kwargs: dict) -> int:
     if user_slippage is not None:
         try:
             pct = float(user_slippage)
+        except (ValueError, TypeError):
+            pass  # non-numeric input → fall through to default
+        else:
             if pct == 0:
                 raise ValueError(
                     "Slippage of 0% would cause most swaps to revert. "
@@ -148,8 +151,4 @@ def resolve_slippage_bps(ctx: ResolveContext, kwargs: dict) -> int:
                 )
             if 0 < pct <= 100:
                 return int(pct * 100)
-        except ValueError:
-            raise
-        except TypeError:
-            pass
     return int(kwargs.get("slippage_bps", DEFAULT_SLIPPAGE_BPS))
