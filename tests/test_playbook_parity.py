@@ -4,6 +4,7 @@ import json
 from unittest.mock import patch, MagicMock
 
 import pytest
+import eth_abi
 
 from defi_skills.engine.playbook_engine import PlaybookEngine
 from defi_skills.engine.token_resolver import TokenResolver
@@ -54,6 +55,8 @@ MOCK_OPERATOR = "0x1234567890ABCDeF1234567890aBcDEF12345678"
 MOCK_ATOKEN_USDC = "0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c"
 MOCK_ATOKEN_WETH = "0x4d5F47FA6A74757f35C14fD3a6Ef8E3C9BC514E8"
 NFPM = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
+FIBROUS_ROUTER = "0x274602a953847d807231d2370072F5f4E4594B44"
+NATIVE_ETH_SENTINEL = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
 UINT128_MAX = str(2**128 - 1)
 
 
@@ -187,6 +190,24 @@ def mock_pendle_requests(method, url, **kwargs):
     else:
         resp.json.return_value = {}
 
+    return resp
+
+
+def mock_fibrous_requests(url, **kwargs):
+    """Mock Fibrous API responses for route and calldata."""
+    resp = MagicMock()
+    resp.raise_for_status = MagicMock()
+    if "routeAndCallData" in url:
+        route = (WETH_ADDR, USDC_ADDR, 500000000000000000, 1000000000, 990000000, FROM_ADDRESS, 0)
+        swap = (WETH_ADDR, USDC_ADDR, 10000, 1, MOCK_OPERATOR, 0, b"")
+        calldata = "0x8619b04e" + eth_abi.encode(
+            ['(address,address,uint256,uint256,uint256,address,uint8)', '(address,address,uint32,int24,address,uint8,bytes)[]'],
+            [route, [swap]]
+        ).hex()
+        resp.json.return_value = {
+            "success": True,
+            "calldata": calldata,
+        }
     return resp
 
 
@@ -597,6 +618,20 @@ TEST_CASES = [
          "target_contract": PENDLE_ROUTER, "selector": "0xf7e375e8"},
         id="pendle_claim_rewards",
     ),
+    # ── Fibrous ──
+    pytest.param(
+        {"action": "fibrous_swap", "arguments": {"asset_in": "WETH", "asset_out": "USDC", "amount": "0.5"}},
+        {"action": "fibrous_swap", "function_name": "swap",
+         "target_contract": FIBROUS_ROUTER, "selector": "0x8619b04e", "chain_id": 8453},
+        id="fibrous_swap",
+    ),
+    pytest.param(
+        {"action": "fibrous_swap", "arguments": {"asset_in": "ETH", "asset_out": "USDC", "amount": "0.5"}},
+        {"action": "fibrous_swap", "function_name": "swap",
+         "target_contract": FIBROUS_ROUTER, "selector": "0x8619b04e",
+         "value_nonzero": True, "chain_id": 8453},
+        id="fibrous_swap_native_eth",
+    ),
     # ── Error cases ──
     pytest.param(
         {"action": "nonexistent_action", "arguments": {"foo": "bar"}},
@@ -615,12 +650,15 @@ TEST_CASES = [
 
 @pytest.mark.parametrize("llm_output,expect", TEST_CASES)
 def test_playbook_parity(engine, llm_output, expect):
+    cid = expect.get("chain_id", CHAIN_ID)
+
     with patch("time.time", return_value=FIXED_TIME), \
          patch("defi_skills.engine.resolvers.core.time") as mock_time, \
          patch("defi_skills.engine.resolvers.common.raw_eth_call", side_effect=mock_raw_eth_call), \
          patch("defi_skills.engine.resolvers.balancer.urllib.request.urlopen", side_effect=mock_urlopen), \
          patch("defi_skills.engine.resolvers.pendle.requests.get", side_effect=lambda url, **kw: mock_pendle_requests("GET", url, **kw)), \
          patch("defi_skills.engine.resolvers.pendle.requests.post", side_effect=lambda url, **kw: mock_pendle_requests("POST", url, **kw)), \
+         patch("defi_skills.engine.resolvers.fibrous.requests.get", side_effect=lambda url, **kw: mock_fibrous_requests(url, **kw)), \
          patch.dict("os.environ", {"THEGRAPH_API_KEY": "test-key"}):
         mock_time.time.return_value = FIXED_TIME
 
@@ -629,11 +667,11 @@ def test_playbook_parity(engine, llm_output, expect):
 
         if expect.get("should_raise"):
             with pytest.raises(ValueError, match=expect["should_raise"]):
-                engine.build_payload(llm_output, chain_id=CHAIN_ID, from_address=FROM_ADDRESS)
+                engine.build_payload(llm_output, chain_id=cid, from_address=FROM_ADDRESS)
             return
 
         try:
-            payload = engine.build_payload(llm_output, chain_id=CHAIN_ID, from_address=FROM_ADDRESS)
+            payload = engine.build_payload(llm_output, chain_id=cid, from_address=FROM_ADDRESS)
         except (ValueError, KeyError):
             payload = None
 

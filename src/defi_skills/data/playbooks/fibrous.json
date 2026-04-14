@@ -1,0 +1,109 @@
+{
+  "protocol": "fibrous",
+  "version": "1.0",
+  "description": "Fibrous DEX aggregator — multi-hop token swaps with optimal routing.",
+  "actions": {
+    "fibrous_swap": {
+      "description": "Swap tokens using Fibrous aggregation for best execution.",
+      "target_contract": "router",
+      "function_name": "swap",
+      "function_selector": "0x8619b04e",
+      "abi_source": "standard",
+      "standard_abi_key": "fibrous_router_swap",
+      "value_logic": {
+        "type": "from_arg",
+        "source_arg": "msg_value"
+      },
+      "payload_args": {
+        "asset_in": {
+          "source": "resolve_fibrous_token",
+          "llm_field": "asset_in",
+          "description": "Token symbol or address to sell (e.g. ETH, WETH, USDC)"
+        },
+        "asset_out": {
+          "source": "resolve_fibrous_token",
+          "llm_field": "asset_out",
+          "description": "Token symbol or address to buy (e.g. ETH, WETH, USDC)"
+        },
+        "amount": {
+          "source": "resolve_amount_or_balance",
+          "llm_field": "amount",
+          "decimals_from": "$asset_in",
+          "description": "Amount to sell, or 'max'"
+        },
+        "slippage": {
+          "source": "llm_passthrough",
+          "llm_field": "slippage",
+          "optional": true
+        },
+        "fibrous_data": {
+          "source": "resolve_fibrous_swap_data",
+          "description": "Fetches route and calldata from the Fibrous API, then ABI-decodes swap parameters locally."
+        },
+        "msg_value": {
+          "source": "resolve_fibrous_msg_value"
+        }
+      },
+      "param_mapping": [
+        {
+          "name": "route",
+          "source": "arg",
+          "arg_key": "fibrous_data.route_param",
+          "coerce": "raw"
+        },
+        {
+          "name": "swap_parameters",
+          "source": "arg",
+          "arg_key": "fibrous_data.swap_params",
+          "coerce": "raw"
+        }
+      ],
+      "approvals": [
+        {
+          "token": "$asset_in",
+          "spender": "router"
+        }
+      ]
+    }
+  },
+  "standard_abis": {
+    "fibrous_router_swap": {
+      "type": "function",
+      "name": "swap",
+      "inputs": [
+        {
+          "name": "route",
+          "type": "tuple",
+          "internalType": "struct RouteParam",
+          "components": [
+            {"name": "token_in", "type": "address"},
+            {"name": "token_out", "type": "address"},
+            {"name": "amount_in", "type": "uint256"},
+            {"name": "amount_out", "type": "uint256"},
+            {"name": "min_received", "type": "uint256"},
+            {"name": "destination", "type": "address"},
+            {"name": "swap_type", "type": "uint8"}
+          ]
+        },
+        {
+          "name": "swap_parameters",
+          "type": "tuple[]",
+          "internalType": "struct SwapParams[]",
+          "components": [
+            {"name": "token_in", "type": "address"},
+            {"name": "token_out", "type": "address"},
+            {"name": "rate", "type": "uint32"},
+            {"name": "protocol_id", "type": "int24"},
+            {"name": "pool_address", "type": "address"},
+            {"name": "swap_type", "type": "uint8"},
+            {"name": "extra_data", "type": "bytes"}
+          ]
+        }
+      ],
+      "outputs": [
+        {"name": "", "type": "uint256"}
+      ],
+      "stateMutability": "payable"
+    }
+  }
+}
