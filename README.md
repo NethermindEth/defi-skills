@@ -30,7 +30,7 @@ https://github.com/user-attachments/assets/cdc2fd63-b007-40a4-900e-a6f775b6e9fa
 ## Install
 
 ```bash
-pip install defi-skills --extra-index-url https://nethermind.jfrog.io/artifactory/api/pypi/kyoto-pypi-local-prod/simple
+pip install defi-skills
 ```
 
 Or from source:
