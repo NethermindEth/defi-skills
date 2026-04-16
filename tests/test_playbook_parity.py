@@ -4,7 +4,6 @@ import json
 from unittest.mock import patch, MagicMock
 
 import pytest
-import eth_abi
 
 from defi_skills.engine.playbook_engine import PlaybookEngine
 from defi_skills.engine.token_resolver import TokenResolver
@@ -56,7 +55,6 @@ MOCK_ATOKEN_USDC = "0x98C23E9d8f34FEFb1B7BD6a91B7FF122F4e16F5c"
 MOCK_ATOKEN_WETH = "0x4d5F47FA6A74757f35C14fD3a6Ef8E3C9BC514E8"
 NFPM = "0xC36442b4a4522E871399CD717aBDD847Ab11FE88"
 FIBROUS_ROUTER = "0x274602a953847d807231d2370072F5f4E4594B44"
-NATIVE_ETH_SENTINEL = "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
 UINT128_MAX = str(2**128 - 1)
 
 
@@ -194,20 +192,26 @@ def mock_pendle_requests(method, url, **kwargs):
 
 
 def mock_fibrous_requests(url, **kwargs):
-    """Mock Fibrous API responses for route and calldata."""
+    if "api.fibrous.finance" not in url:
+        return mock_pendle_requests("GET", url, **kwargs)
     resp = MagicMock()
     resp.raise_for_status = MagicMock()
-    if "routeAndCallData" in url:
-        route = (WETH_ADDR, USDC_ADDR, 500000000000000000, 1000000000, 990000000, FROM_ADDRESS, 0)
-        swap = (WETH_ADDR, USDC_ADDR, 10000, 1, MOCK_OPERATOR, 0, b"")
-        calldata = "0x8619b04e" + eth_abi.encode(
-            ['(address,address,uint256,uint256,uint256,address,uint8)', '(address,address,uint32,int24,address,uint8,bytes)[]'],
-            [route, [swap]]
-        ).hex()
-        resp.json.return_value = {
-            "success": True,
-            "calldata": calldata,
-        }
+    resp.json.return_value = {
+        "route": {"success": True},
+        "calldata": {
+            "route": {
+                "token_in": WETH_ADDR, "token_out": USDC_ADDR,
+                "amount_in": "500000000000000000", "amount_out": "1000000000",
+                "min_received": "990000000", "destination": FROM_ADDRESS, "swap_type": 0,
+            },
+            "swap_parameters": [{
+                "token_in": WETH_ADDR, "token_out": USDC_ADDR,
+                "rate": "10000", "protocol_id": "1",
+                "pool_address": MOCK_OPERATOR, "swap_type": 0,
+                "extra_data": "0x",
+            }],
+        },
+    }
     return resp
 
 
@@ -817,3 +821,31 @@ class TestBuildTransactions:
         action_tx = result["transactions"][-1]
         for key in action_tx["arguments"]:
             assert not key.startswith("__"), f"Internal key '{key}' leaked into output"
+
+    def test_fibrous_native_eth_skips_approval(self, engine):
+        """Native-ETH swap should produce 1 action tx with value>0 and no approval."""
+        llm_output = {"action": "fibrous_swap",
+                      "arguments": {"asset_in": "ETH", "asset_out": "USDC", "amount": "0.5"}}
+        with patch("defi_skills.engine.resolvers.fibrous.requests.get",
+                   side_effect=lambda url, **kw: mock_fibrous_requests(url, **kw)):
+            result = engine.build_transactions(llm_output, chain_id=8453, from_address=FROM_ADDRESS)
+
+        assert result["success"] is True
+        txs = result["transactions"]
+        assert len(txs) == 1
+        assert txs[0]["type"] == "action"
+        assert int(txs[0]["raw_tx"]["value"]) > 0
+
+    def test_fibrous_erc20_emits_approval(self, engine):
+        """ERC-20 swap should still emit an approval tx."""
+        llm_output = {"action": "fibrous_swap",
+                      "arguments": {"asset_in": "WETH", "asset_out": "USDC", "amount": "0.5"}}
+        with patch("defi_skills.engine.resolvers.fibrous.requests.get",
+                   side_effect=lambda url, **kw: mock_fibrous_requests(url, **kw)):
+            result = engine.build_transactions(llm_output, chain_id=8453, from_address=FROM_ADDRESS)
+
+        assert result["success"] is True
+        txs = result["transactions"]
+        assert len(txs) == 2
+        assert txs[0]["type"] == "approval"
+        assert txs[1]["type"] == "action"

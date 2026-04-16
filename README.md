@@ -1,6 +1,6 @@
 # defi-skills
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org) ![Chains: 6](https://img.shields.io/badge/chains-6-orange.svg) ![Protocols: 13](https://img.shields.io/badge/protocols-13-brightgreen.svg) ![Actions: 53](https://img.shields.io/badge/actions-53-blueviolet.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org) ![Chains: 6](https://img.shields.io/badge/chains-6-orange.svg) ![Protocols: 14](https://img.shields.io/badge/protocols-14-brightgreen.svg) ![Actions: 54](https://img.shields.io/badge/actions-54-blueviolet.svg)
 
 Translate natural language into unsigned DeFi transaction payloads. A data-driven playbook engine resolves human-readable parameters (token symbols, ENS names, decimal amounts) into ABI-encoded calldata, with zero protocol-specific code in the engine.
 
@@ -111,6 +111,7 @@ Each `raw_tx` contains `{chain_id, to, value, data}` -- everything needed to sig
 | Rocket Pool | Mainnet | `rocketpool_stake`, `rocketpool_unstake` |
 | EigenLayer | Mainnet | `eigenlayer_deposit`, `eigenlayer_delegate`, `eigenlayer_undelegate`, `eigenlayer_queue_withdrawals`, `eigenlayer_complete_withdrawal` |
 | Pendle V2 | Mainnet | `pendle_swap_token_for_pt`, `pendle_swap_pt_for_token`, `pendle_swap_token_for_yt`, `pendle_swap_yt_for_token`, `pendle_add_liquidity`, `pendle_remove_liquidity`, `pendle_mint_py`, `pendle_redeem_py`, `pendle_claim_rewards` |
+| Fibrous | Base | `fibrous_swap` |
 
 ## How It Works
 

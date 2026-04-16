@@ -1,6 +1,6 @@
 ---
 name: intent-to-transaction
-description: "Build unsigned DeFi transactions from natural language across multiple chains. Use when the user wants to send, transfer, swap, stake, unstake, wrap, unwrap, supply, withdraw, borrow, repay, deposit, delegate, add liquidity, remove liquidity, or trade yield tokens on-chain. Supports Ethereum, Arbitrum, Base, Optimism, Polygon, and Sepolia. Covers ETH, ERC-20, ERC-721, Aave, Lido, Uniswap, Curve, Compound, MakerDAO, Rocket Pool, EigenLayer, Balancer, Pendle, and WETH."
+description: "Build unsigned DeFi transactions from natural language across multiple chains. Use when the user wants to send, transfer, swap, stake, unstake, wrap, unwrap, supply, withdraw, borrow, repay, deposit, delegate, add liquidity, remove liquidity, or trade yield tokens on-chain. Supports Ethereum, Arbitrum, Base, Optimism, Polygon, and Sepolia. Covers ETH, ERC-20, ERC-721, Aave, Lido, Uniswap, Curve, Compound, MakerDAO, Rocket Pool, EigenLayer, Balancer, Pendle, Fibrous, and WETH."
 ---
 
 # Intent to Transaction
@@ -176,6 +176,7 @@ On failure: `{"success": false, "error": "description of what went wrong"}`.
 | Rocket Pool | `rocketpool_stake`, `rocketpool_unstake` | Mainnet only |
 | EigenLayer | `eigenlayer_deposit`, `eigenlayer_delegate`, `eigenlayer_undelegate`, `eigenlayer_queue_withdrawals`, `eigenlayer_complete_withdrawal` | Mainnet only |
 | Pendle V2 | `pendle_swap_token_for_pt`, `pendle_swap_pt_for_token`, `pendle_swap_token_for_yt`, `pendle_swap_yt_for_token`, `pendle_add_liquidity`, `pendle_remove_liquidity`, `pendle_mint_py`, `pendle_redeem_py`, `pendle_claim_rewards` | Mainnet only |
+| Fibrous | `fibrous_swap` | Base only |
 
 Not all actions are available on all chains. Use `defi-skills actions --chain-id <id> --json` to check.
 

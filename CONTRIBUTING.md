@@ -228,6 +228,17 @@ Approvals are needed when the user's tokens are transferred FROM them to the pro
 - These tokens need approval to the router
 - Use `"$_pendle_pt"` or `"$market"` to reference dynamically resolved addresses
 
+**Native ETH (msg.value) and approval skipping:**
+
+If your protocol accepts native ETH as a swap input or deposit, the approval spec can stay chain-agnostic — the engine automatically skips approvals whose resolved token is a recognised native-ETH sentinel. See `NATIVE_ETH_SENTINELS` and `is_native_sentinel()` in [src/defi_skills/engine/chains.py](src/defi_skills/engine/chains.py); the skip happens in `resolve_approvals` in [playbook_engine.py](src/defi_skills/engine/playbook_engine.py).
+
+Currently recognised sentinels:
+
+- `0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee` (industry standard, used by 1inch, Fibrous, Paraswap, etc.)
+- `0x0000000000000000000000000000000000000000` (used by a few protocols, e.g. Uniswap V4 PoolKey)
+
+If your protocol uses a **different** placeholder for native ETH in its swap/deposit calldata, add that address (lowercase) to `NATIVE_ETH_SENTINELS`. Otherwise your playbook will emit a bogus `approve(router, MAX)` transaction pointed at the sentinel address (not a real contract), which will revert on chain. No per-playbook flag is needed — the skip is driven entirely by the sentinel list.
+
 #### Step 7: Add custom resolvers (if needed)
 
 If the protocol has dynamic data that existing resolvers don't handle:
