@@ -4,7 +4,6 @@ import logging
 from typing import Any, Optional
 
 import requests
-import eth_abi
 
 from defi_skills.engine.resolvers.common import ResolveContext, resolve_slippage_bps, sanitize_error
 
@@ -75,33 +74,19 @@ def resolve_fibrous_swap_data(value: Any, ctx: ResolveContext, **kwargs) -> dict
         logger.error("Fibrous API error: %s", sanitize_error(str(e)))
         raise ValueError(f"Fibrous API quote failed: {sanitize_error(str(e))}")
 
-    if not data.get("success"):
+    if not data.get("route", {}).get("success"):
         raise ValueError(f"Fibrous route failed: {sanitize_error(str(data))}")
 
-    calldata = data.get("calldata", "")
-    if not calldata:
-        raise ValueError("Fibrous response missing calldata.")
-
-    # swap() selector (4 bytes) + ABI-encoded params
-    try:
-        raw_hex = calldata[10:] if calldata.startswith("0x") else calldata[8:]
-        encoded_params = bytes.fromhex(raw_hex)
-
-        route_tuple, swap_params_array = eth_abi.decode(
-            [
-                '(address,address,uint256,uint256,uint256,address,uint8)',
-                '(address,address,uint32,int24,address,uint8,bytes)[]',
-            ],
-            encoded_params,
-        )
-    except Exception as e:
-        logger.error("Failed to decode Fibrous calldata: %s", sanitize_error(str(e)))
-        raise ValueError(f"Failed to decode Fibrous calldata: {sanitize_error(str(e))}")
-
-    return {
-        "route_param": route_tuple,
-        "swap_params": list(swap_params_array),
-    }
+    r = data["calldata"]["route"]
+    sp = data["calldata"]["swap_parameters"]
+    route_tuple = (r["token_in"], r["token_out"], int(r["amount_in"]),
+                   int(r["amount_out"]), int(r["min_received"]),
+                   r["destination"], int(r["swap_type"]))
+    swap_params = [(s["token_in"], s["token_out"], int(s["rate"]),
+                    int(s["protocol_id"]), s["pool_address"], int(s["swap_type"]),
+                    bytes.fromhex(s["extra_data"].removeprefix("0x")))
+                   for s in sp]
+    return {"route_param": route_tuple, "swap_params": swap_params}
 
 
 def resolve_fibrous_msg_value(value: Any, ctx: ResolveContext, **kwargs) -> str:

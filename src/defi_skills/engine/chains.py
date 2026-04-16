@@ -127,3 +127,14 @@ def supported_chain_ids() -> List[int]:
 def get_approve_reset_tokens(chain_id: int) -> FrozenSet[str]:
     """Get tokens requiring approve-reset for a chain."""
     return get_chain_config(chain_id).approve_reset_tokens
+
+
+NATIVE_ETH_SENTINELS = frozenset({
+    "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "0x0000000000000000000000000000000000000000",
+})
+
+
+def is_native_sentinel(addr: Optional[str]) -> bool:
+    """True if addr is a known placeholder for native ETH (not a real ERC-20)."""
+    return bool(addr) and addr.lower() in NATIVE_ETH_SENTINELS

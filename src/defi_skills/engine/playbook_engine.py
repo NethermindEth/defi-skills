@@ -11,7 +11,7 @@ from defi_skills.engine.chain_resources import (
     load_chain_contracts,
     protocol_available,
 )
-from defi_skills.engine.chains import get_approve_reset_tokens
+from defi_skills.engine.chains import get_approve_reset_tokens, is_native_sentinel
 from defi_skills.engine.resolvers import (
     RESOLVER_REGISTRY,
     ResolveContext,
@@ -429,6 +429,9 @@ class PlaybookEngine:
             else:
                 contract_info = contracts.get(spender, {})
                 spender_addr = contract_info.get("address", spender)
+
+            if is_native_sentinel(token_addr):
+                continue
 
             if token_addr and spender_addr:
                 resolved.append({
