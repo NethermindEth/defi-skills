@@ -76,6 +76,8 @@ Open `src/defi_skills/data/playbooks/<name>.json` and check:
 
 Remove `_review_notes` from the final JSON before committing.
 
+**Playbook formatting.** Playbooks use a hybrid JSON format: short objects/arrays stay on one line, longer ones expand. The generator script produces this format automatically; if you hand-edit a playbook, run `python scripts/format_playbooks.py` before committing to keep diffs clean. A pre-commit hook is provided in `.pre-commit-config.yaml` — install with `pre-commit install` to run it automatically.
+
 #### Step 3: Understand the playbook schema
 
 **Top level:**

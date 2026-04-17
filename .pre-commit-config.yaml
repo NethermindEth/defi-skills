@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: format-playbooks
+        name: Format playbook JSON
+        entry: python scripts/format_playbooks.py
+        language: system
+        files: ^src/defi_skills/data/playbooks/.*\.json$
+        pass_filenames: true
