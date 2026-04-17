@@ -15,7 +15,7 @@ metadata:
     primaryEnv: WALLET_ADDRESS
     homepage: https://defi-skills.nethermind.io/
     source: https://github.com/NethermindEth/defi-skills
-    install: "pip install --upgrade defi-skills --extra-index-url https://nethermind.jfrog.io/artifactory/api/pypi/kyoto-pypi-local-prod/simple"
+    install: "pip install --upgrade defi-skills"
 ---
 
 # Intent to Transaction
@@ -63,7 +63,7 @@ Examples:
 The CLI must be installed:
 
 ```bash
-pip install --upgrade defi-skills --extra-index-url https://nethermind.jfrog.io/artifactory/api/pypi/kyoto-pypi-local-prod/simple
+pip install --upgrade defi-skills
 ```
 
 A wallet address is required. The CLI reads it from (in priority order):
@@ -267,7 +267,7 @@ The CLI is stateless. Each build call is independent with no memory of previous 
 - **Negative amount**: Amounts must be zero or positive.
 - **ENS resolution failed**: The user needs to run `defi-skills config set alchemy_api_key <KEY>`, or provide a hex address instead. Note: ENS is only available on Ethereum Mainnet and Sepolia. On L2 chains, always use hex addresses (0x...).
 - **Missing wallet**: Run `defi-skills config set-wallet <address>`.
-- **CLI not found**: Run `pip install defi-skills --extra-index-url https://nethermind.jfrog.io/artifactory/api/pypi/kyoto-pypi-local-prod/simple`.
+- **CLI not found**: Run `pip install defi-skills`.
 
 ## Safety
 
