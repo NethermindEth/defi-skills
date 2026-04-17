@@ -4,73 +4,32 @@
   "actions": {
     "curve_add_liquidity": {
       "description": "Add single-sided liquidity to Curve 3pool",
-      "valid_tokens": [
-        "DAI",
-        "USDC",
-        "USDT"
-      ],
+      "valid_tokens": ["DAI", "USDC", "USDT"],
       "target_contract": "pool_3crv",
       "function_name": "add_liquidity",
       "function_selector": "0x4515cef3",
       "abi_source": "etherscan_cache",
-      "value_logic": {
-        "type": "zero"
-      },
-      "approvals": [
-        {
-          "token": "$__token_address",
-          "spender": "target_contract"
-        }
-      ],
-      "required_payload_args": [
-        "amounts",
-        "min_mint_amount",
-        "human_readable_amount"
-      ],
+      "value_logic": {"type": "zero"},
+      "approvals": [{"token": "$__token_address", "spender": "target_contract"}],
+      "required_payload_args": ["amounts", "min_mint_amount", "human_readable_amount"],
       "payload_args": {
-        "__asset": {
-          "source": "llm_passthrough",
-          "llm_field": "asset"
-        },
-        "__token_address": {
-          "source": "resolve_token_address",
-          "llm_field": "asset"
-        },
+        "__asset": {"source": "llm_passthrough", "llm_field": "asset"},
+        "__token_address": {"source": "resolve_token_address", "llm_field": "asset"},
         "amounts": {
           "source": "build_fixed_array",
           "array_size": 3,
-          "index_map": {
-            "DAI": 0,
-            "USDC": 1,
-            "USDT": 2
-          },
+          "index_map": {"DAI": 0, "USDC": 1, "USDT": 2},
           "llm_field": "amount",
           "asset_field": "asset",
           "decimals_from": "$asset",
           "fill_value": "0"
         },
-        "slippage": {
-          "source": "llm_passthrough",
-          "llm_field": "slippage",
-          "optional": true
-        },
-        "min_mint_amount": {
-          "source": "resolve_curve_min_mint",
-          "slippage_bps": 50,
-          "pool_address": "$pool_3crv"
-        },
-        "human_readable_amount": {
-          "source": "compute_human_readable",
-          "template": "{amount} {asset}"
-        }
+        "slippage": {"source": "llm_passthrough", "llm_field": "slippage", "optional": true},
+        "min_mint_amount": {"source": "resolve_curve_min_mint", "slippage_bps": 50, "pool_address": "$pool_3crv"},
+        "human_readable_amount": {"source": "compute_human_readable", "template": "{amount} {asset}"}
       },
       "param_mapping": [
-        {
-          "name": "amounts",
-          "source": "arg",
-          "arg_key": "amounts",
-          "coerce": "int_array"
-        },
+        {"name": "amounts", "source": "arg", "arg_key": "amounts", "coerce": "int_array"},
         {
           "name": "min_mint_amount",
           "source": "arg",
@@ -85,53 +44,28 @@
       "function_name": "remove_liquidity",
       "function_selector": "0xecb586a5",
       "abi_source": "etherscan_cache",
-      "value_logic": {
-        "type": "zero"
-      },
-      "required_payload_args": [
-        "amount",
-        "min_amounts",
-        "human_readable_amount"
-      ],
+      "value_logic": {"type": "zero"},
+      "required_payload_args": ["amount", "min_amounts", "human_readable_amount"],
       "payload_args": {
         "amount": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount",
-          "fallback_llm_fields": [
-            "amount"
-          ],
+          "fallback_llm_fields": ["amount"],
           "decimals_from": 18,
           "balance_of": "$lp_token"
         },
-        "slippage": {
-          "source": "llm_passthrough",
-          "llm_field": "slippage",
-          "optional": true
-        },
+        "slippage": {"source": "llm_passthrough", "llm_field": "slippage", "optional": true},
         "min_amounts": {
           "source": "resolve_curve_min_amounts",
           "slippage_bps": 50,
           "pool_address": "$pool_3crv",
           "lp_token_address": "$lp_token"
         },
-        "human_readable_amount": {
-          "source": "compute_human_readable",
-          "template": "{amount} LP"
-        }
+        "human_readable_amount": {"source": "compute_human_readable", "template": "{amount} LP"}
       },
       "param_mapping": [
-        {
-          "name": "_amount",
-          "source": "arg",
-          "arg_key": "amount",
-          "coerce": "uint256"
-        },
-        {
-          "name": "min_amounts",
-          "source": "arg",
-          "arg_key": "min_amounts",
-          "coerce": "int_array"
-        }
+        {"name": "_amount", "source": "arg", "arg_key": "amount", "coerce": "uint256"},
+        {"name": "min_amounts", "source": "arg", "arg_key": "min_amounts", "coerce": "int_array"}
       ]
     }
   }

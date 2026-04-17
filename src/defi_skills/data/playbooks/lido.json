@@ -8,28 +8,17 @@
       "function_name": "submit",
       "function_selector": "0xa1903eab",
       "abi_source": "etherscan_cache",
-      "value_logic": {
-        "type": "from_arg",
-        "source_arg": "value"
-      },
-      "required_payload_args": [
-        "value",
-        "human_readable_amount"
-      ],
+      "value_logic": {"type": "from_arg", "source_arg": "value"},
+      "required_payload_args": ["value", "human_readable_amount"],
       "payload_args": {
         "value": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount",
-          "fallback_llm_fields": [
-            "value"
-          ],
+          "fallback_llm_fields": ["value"],
           "decimals_from": "$native",
           "balance_of": "$native"
         },
-        "human_readable_amount": {
-          "source": "compute_human_readable",
-          "template": "{amount} ETH"
-        }
+        "human_readable_amount": {"source": "compute_human_readable", "template": "{amount} ETH"}
       },
       "param_mapping": [
         {
@@ -46,42 +35,20 @@
       "function_name": "wrap",
       "function_selector": "0xea598cb0",
       "abi_source": "etherscan_cache",
-      "value_logic": {
-        "type": "zero"
-      },
-      "approvals": [
-        {
-          "token": "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
-          "spender": "target_contract"
-        }
-      ],
-      "required_payload_args": [
-        "_stETHAmount",
-        "human_readable_amount"
-      ],
+      "value_logic": {"type": "zero"},
+      "approvals": [{"token": "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84", "spender": "target_contract"}],
+      "required_payload_args": ["_stETHAmount", "human_readable_amount"],
       "payload_args": {
         "_stETHAmount": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount",
-          "fallback_llm_fields": [
-            "amount"
-          ],
+          "fallback_llm_fields": ["amount"],
           "decimals_from": "$native",
           "balance_of": "$steth"
         },
-        "human_readable_amount": {
-          "source": "compute_human_readable",
-          "template": "{amount} stETH \u2192 wstETH"
-        }
+        "human_readable_amount": {"source": "compute_human_readable", "template": "{amount} stETH → wstETH"}
       },
-      "param_mapping": [
-        {
-          "name": "_stETHAmount",
-          "source": "arg",
-          "arg_key": "_stETHAmount",
-          "coerce": "uint256"
-        }
-      ]
+      "param_mapping": [{"name": "_stETHAmount", "source": "arg", "arg_key": "_stETHAmount", "coerce": "uint256"}]
     },
     "lido_unwrap_wsteth": {
       "description": "Unwrap wstETH back to stETH",
@@ -89,36 +56,19 @@
       "function_name": "unwrap",
       "function_selector": "0xde0e9a3e",
       "abi_source": "etherscan_cache",
-      "value_logic": {
-        "type": "zero"
-      },
-      "required_payload_args": [
-        "_wstETHAmount",
-        "human_readable_amount"
-      ],
+      "value_logic": {"type": "zero"},
+      "required_payload_args": ["_wstETHAmount", "human_readable_amount"],
       "payload_args": {
         "_wstETHAmount": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount",
-          "fallback_llm_fields": [
-            "amount"
-          ],
+          "fallback_llm_fields": ["amount"],
           "decimals_from": "$native",
           "balance_of": "$wsteth"
         },
-        "human_readable_amount": {
-          "source": "compute_human_readable",
-          "template": "{amount} wstETH \u2192 stETH"
-        }
+        "human_readable_amount": {"source": "compute_human_readable", "template": "{amount} wstETH → stETH"}
       },
-      "param_mapping": [
-        {
-          "name": "_wstETHAmount",
-          "source": "arg",
-          "arg_key": "_wstETHAmount",
-          "coerce": "uint256"
-        }
-      ]
+      "param_mapping": [{"name": "_wstETHAmount", "source": "arg", "arg_key": "_wstETHAmount", "coerce": "uint256"}]
     },
     "lido_unstake": {
       "description": "Request stETH withdrawal from Lido",
@@ -126,56 +76,28 @@
       "function_name": "requestWithdrawals",
       "function_selector": "0xd6681042",
       "abi_source": "etherscan_cache",
-      "value_logic": {
-        "type": "zero"
-      },
-      "approvals": [
-        {
-          "token": "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
-          "spender": "target_contract"
-        }
-      ],
-      "required_payload_args": [
-        "_amounts",
-        "_owner",
-        "human_readable_amount"
-      ],
+      "value_logic": {"type": "zero"},
+      "approvals": [{"token": "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84", "spender": "target_contract"}],
+      "required_payload_args": ["_amounts", "_owner", "human_readable_amount"],
       "payload_args": {
         "_amounts": {
           "source": "wrap_in_array",
           "llm_field": "amount",
-          "fallback_llm_fields": [
-            "amount"
-          ],
+          "fallback_llm_fields": ["amount"],
           "decimals": 18,
           "balance_of": "$steth"
         },
         "_owner": {
           "source": "resolve_ens_or_hex",
           "llm_field": "onBehalfOf",
-          "fallback_llm_fields": [
-            "_owner"
-          ],
+          "fallback_llm_fields": ["_owner"],
           "context_field": "from_address"
         },
-        "human_readable_amount": {
-          "source": "compute_human_readable",
-          "template": "{amount} stETH"
-        }
+        "human_readable_amount": {"source": "compute_human_readable", "template": "{amount} stETH"}
       },
       "param_mapping": [
-        {
-          "name": "_amounts",
-          "source": "arg",
-          "arg_key": "_amounts",
-          "coerce": "uint256_array"
-        },
-        {
-          "name": "_owner",
-          "source": "arg",
-          "arg_key": "_owner",
-          "coerce": "address"
-        }
+        {"name": "_amounts", "source": "arg", "arg_key": "_amounts", "coerce": "uint256_array"},
+        {"name": "_owner", "source": "arg", "arg_key": "_owner", "coerce": "address"}
       ]
     },
     "lido_claim_withdrawals": {
@@ -184,27 +106,12 @@
       "function_name": "claimWithdrawals",
       "function_selector": "0xe3afe0a3",
       "abi_source": "etherscan_cache",
-      "value_logic": {
-        "type": "zero"
-      },
-      "required_payload_args": [
-        "_requestIds",
-        "_hints",
-        "human_readable_amount"
-      ],
+      "value_logic": {"type": "zero"},
+      "required_payload_args": ["_requestIds", "_hints", "human_readable_amount"],
       "payload_args": {
-        "_requestIds": {
-          "source": "resolve_lido_withdrawal_requests",
-          "withdrawal_queue_address": "$withdrawal"
-        },
-        "_hints": {
-          "source": "resolve_lido_checkpoint_hints",
-          "withdrawal_queue_address": "$withdrawal"
-        },
-        "human_readable_amount": {
-          "source": "compute_human_readable",
-          "template": "claim Lido withdrawals"
-        }
+        "_requestIds": {"source": "resolve_lido_withdrawal_requests", "withdrawal_queue_address": "$withdrawal"},
+        "_hints": {"source": "resolve_lido_checkpoint_hints", "withdrawal_queue_address": "$withdrawal"},
+        "human_readable_amount": {"source": "compute_human_readable", "template": "claim Lido withdrawals"}
       },
       "param_mapping": [
         {
@@ -213,12 +120,7 @@
           "arg_key": "_requestIds",
           "coerce": "uint256_array"
         },
-        {
-          "name": "_hints",
-          "source": "arg",
-          "arg_key": "_hints",
-          "coerce": "uint256_array"
-        }
+        {"name": "_hints", "source": "arg", "arg_key": "_hints", "coerce": "uint256_array"}
       ]
     }
   }

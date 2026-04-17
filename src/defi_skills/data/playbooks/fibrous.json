@@ -10,10 +10,7 @@
       "function_selector": "0x8619b04e",
       "abi_source": "standard",
       "standard_abi_key": "fibrous_router_swap",
-      "value_logic": {
-        "type": "from_arg",
-        "source_arg": "msg_value"
-      },
+      "value_logic": {"type": "from_arg", "source_arg": "msg_value"},
       "payload_args": {
         "asset_in": {
           "source": "resolve_fibrous_token",
@@ -31,26 +28,15 @@
           "decimals_from": "$asset_in",
           "description": "Amount to sell, or 'max'"
         },
-        "slippage": {
-          "source": "llm_passthrough",
-          "llm_field": "slippage",
-          "optional": true
-        },
+        "slippage": {"source": "llm_passthrough", "llm_field": "slippage", "optional": true},
         "fibrous_data": {
           "source": "resolve_fibrous_swap_data",
           "description": "Fetches route and calldata from the Fibrous API, then ABI-decodes swap parameters locally."
         },
-        "msg_value": {
-          "source": "resolve_fibrous_msg_value"
-        }
+        "msg_value": {"source": "resolve_fibrous_msg_value"}
       },
       "param_mapping": [
-        {
-          "name": "route",
-          "source": "arg",
-          "arg_key": "fibrous_data.route_param",
-          "coerce": "raw"
-        },
+        {"name": "route", "source": "arg", "arg_key": "fibrous_data.route_param", "coerce": "raw"},
         {
           "name": "swap_parameters",
           "source": "arg",
@@ -58,12 +44,7 @@
           "coerce": "raw"
         }
       ],
-      "approvals": [
-        {
-          "token": "$asset_in",
-          "spender": "router"
-        }
-      ]
+      "approvals": [{"token": "$asset_in", "spender": "router"}]
     }
   },
   "standard_abis": {
@@ -100,9 +81,7 @@
           ]
         }
       ],
-      "outputs": [
-        {"name": "", "type": "uint256"}
-      ],
+      "outputs": [{"name": "", "type": "uint256"}],
       "stateMutability": "payable"
     }
   }

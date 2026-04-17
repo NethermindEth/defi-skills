@@ -13,167 +13,69 @@
   "actions": {
     "eigenlayer_deposit": {
       "description": "Deposit LST into EigenLayer strategy for restaking",
-      "valid_tokens": [
-        "stETH",
-        "rETH",
-        "cbETH",
-        "wBETH",
-        "swETH",
-        "sfrxETH",
-        "osETH"
-      ],
-      "registry_mapping": {
-        "valid_tokens": "valid_tokens",
-        "strategy_map": "strategy_map"
-      },
+      "valid_tokens": ["stETH", "rETH", "cbETH", "wBETH", "swETH", "sfrxETH", "osETH"],
+      "registry_mapping": {"valid_tokens": "valid_tokens", "strategy_map": "strategy_map"},
       "target_contract": "strategy_manager",
       "function_name": "depositIntoStrategy",
       "function_selector": "0xe7a050aa",
       "abi_source": "etherscan_cache",
-      "value_logic": {
-        "type": "zero"
-      },
-      "approvals": [
-        {
-          "token": "$__token_address",
-          "spender": "target_contract"
-        }
-      ],
-      "required_payload_args": [
-        "strategy",
-        "__token_address",
-        "amount",
-        "human_readable_amount"
-      ],
+      "value_logic": {"type": "zero"},
+      "approvals": [{"token": "$__token_address", "spender": "target_contract"}],
+      "required_payload_args": ["strategy", "__token_address", "amount", "human_readable_amount"],
       "payload_args": {
-        "strategy": {
-          "source": "resolve_eigenlayer_strategy",
-          "llm_field": "asset"
-        },
-        "__token_address": {
-          "source": "resolve_token_address",
-          "llm_field": "asset"
-        },
+        "strategy": {"source": "resolve_eigenlayer_strategy", "llm_field": "asset"},
+        "__token_address": {"source": "resolve_token_address", "llm_field": "asset"},
         "amount": {
           "source": "resolve_amount_or_balance",
           "llm_field": "amount",
-          "fallback_llm_fields": [
-            "amount"
-          ],
+          "fallback_llm_fields": ["amount"],
           "decimals_from": "$asset",
           "balance_of": "$__token_address"
         },
-        "human_readable_amount": {
-          "source": "compute_human_readable",
-          "template": "{amount} {asset}"
-        }
+        "human_readable_amount": {"source": "compute_human_readable", "template": "{amount} {asset}"}
       },
       "param_mapping": [
-        {
-          "name": "strategy",
-          "source": "arg",
-          "arg_key": "strategy",
-          "coerce": "address"
-        },
-        {
-          "name": "token",
-          "source": "arg",
-          "arg_key": "__token_address",
-          "coerce": "address"
-        },
-        {
-          "name": "amount",
-          "source": "arg",
-          "arg_key": "amount",
-          "coerce": "uint256"
-        }
+        {"name": "strategy", "source": "arg", "arg_key": "strategy", "coerce": "address"},
+        {"name": "token", "source": "arg", "arg_key": "__token_address", "coerce": "address"},
+        {"name": "amount", "source": "arg", "arg_key": "amount", "coerce": "uint256"}
       ]
     },
     "eigenlayer_undelegate": {
       "description": "Undelegate from an EigenLayer operator",
-      "registry_mapping": {
-        "strategy_map": "strategy_map"
-      },
+      "registry_mapping": {"strategy_map": "strategy_map"},
       "target_contract": "delegation_manager",
       "function_name": "undelegate",
       "function_selector": "0xda8be864",
       "abi_source": "etherscan_cache",
-      "value_logic": {
-        "type": "zero"
-      },
-      "required_payload_args": [
-        "staker",
-        "human_readable_amount"
-      ],
+      "value_logic": {"type": "zero"},
+      "required_payload_args": ["staker", "human_readable_amount"],
       "payload_args": {
-        "staker": {
-          "source": "resolve_ens_or_hex",
-          "llm_field": "staker",
-          "context_field": "from_address"
-        },
-        "human_readable_amount": {
-          "source": "compute_human_readable",
-          "template": "undelegate from operator"
-        }
+        "staker": {"source": "resolve_ens_or_hex", "llm_field": "staker", "context_field": "from_address"},
+        "human_readable_amount": {"source": "compute_human_readable", "template": "undelegate from operator"}
       },
-      "param_mapping": [
-        {
-          "name": "staker",
-          "source": "arg",
-          "arg_key": "staker",
-          "coerce": "address"
-        }
-      ]
+      "param_mapping": [{"name": "staker", "source": "arg", "arg_key": "staker", "coerce": "address"}]
     },
     "eigenlayer_delegate": {
       "description": "Delegate to an EigenLayer operator",
-      "registry_mapping": {
-        "strategy_map": "strategy_map"
-      },
+      "registry_mapping": {"strategy_map": "strategy_map"},
       "target_contract": "delegation_manager",
       "function_name": "delegateTo",
       "function_selector": "0xeea9064b",
       "abi_source": "etherscan_cache",
-      "value_logic": {
-        "type": "zero"
-      },
-      "required_payload_args": [
-        "operator",
-        "human_readable_amount"
-      ],
+      "value_logic": {"type": "zero"},
+      "required_payload_args": ["operator", "human_readable_amount"],
       "payload_args": {
-        "operator": {
-          "source": "resolve_ens_or_hex",
-          "llm_field": "operator"
-        },
-        "human_readable_amount": {
-          "source": "compute_human_readable",
-          "template": "delegate to operator"
-        }
+        "operator": {"source": "resolve_ens_or_hex", "llm_field": "operator"},
+        "human_readable_amount": {"source": "compute_human_readable", "template": "delegate to operator"}
       },
       "param_mapping": [
-        {
-          "name": "operator",
-          "source": "arg",
-          "arg_key": "operator",
-          "coerce": "address"
-        },
+        {"name": "operator", "source": "arg", "arg_key": "operator", "coerce": "address"},
         {
           "name": "approverSignatureAndExpiry",
           "source": "struct",
           "fields": [
-            {
-              "name": "signature",
-              "source": "constant",
-              "value": "0x",
-              "coerce": "bytes"
-            },
-            {
-              "name": "expiry",
-              "source": "constant",
-              "value": 0,
-              "coerce": "uint256"
-            }
+            {"name": "signature", "source": "constant", "value": "0x", "coerce": "bytes"},
+            {"name": "expiry", "source": "constant", "value": 0, "coerce": "uint256"}
           ]
         },
         {
@@ -186,92 +88,37 @@
     },
     "eigenlayer_queue_withdrawals": {
       "description": "Queue withdrawal of restaked assets from EigenLayer",
-      "valid_tokens": [
-        "stETH",
-        "rETH",
-        "cbETH",
-        "wBETH",
-        "swETH",
-        "sfrxETH",
-        "osETH"
-      ],
-      "registry_mapping": {
-        "valid_tokens": "valid_tokens",
-        "strategy_map": "strategy_map"
-      },
+      "valid_tokens": ["stETH", "rETH", "cbETH", "wBETH", "swETH", "sfrxETH", "osETH"],
+      "registry_mapping": {"valid_tokens": "valid_tokens", "strategy_map": "strategy_map"},
       "target_contract": "delegation_manager",
       "function_name": "queueWithdrawals",
       "function_selector": "0x0dd8dd02",
       "abi_source": "etherscan_cache",
-      "value_logic": {
-        "type": "zero"
-      },
-      "required_payload_args": [
-        "__withdrawal_params",
-        "human_readable_amount"
-      ],
+      "value_logic": {"type": "zero"},
+      "required_payload_args": ["__withdrawal_params", "human_readable_amount"],
       "payload_args": {
-        "__withdrawal_params": {
-          "source": "resolve_eigenlayer_deposits",
-          "llm_field": "asset"
-        },
-        "human_readable_amount": {
-          "source": "compute_human_readable",
-          "template": "queue EigenLayer withdrawal"
-        }
+        "__withdrawal_params": {"source": "resolve_eigenlayer_deposits", "llm_field": "asset"},
+        "human_readable_amount": {"source": "compute_human_readable", "template": "queue EigenLayer withdrawal"}
       },
-      "param_mapping": [
-        {
-          "name": "params",
-          "source": "struct_array",
-          "arg_key": "__withdrawal_params"
-        }
-      ]
+      "param_mapping": [{"name": "params", "source": "struct_array", "arg_key": "__withdrawal_params"}]
     },
     "eigenlayer_complete_withdrawal": {
       "description": "Complete a queued EigenLayer withdrawal and receive tokens",
-      "registry_mapping": {
-        "strategy_map": "strategy_map"
-      },
+      "registry_mapping": {"strategy_map": "strategy_map"},
       "target_contract": "delegation_manager",
       "function_name": "completeQueuedWithdrawal",
       "function_selector": "0xe4cc3f90",
       "abi_source": "etherscan_cache",
-      "value_logic": {
-        "type": "zero"
-      },
-      "required_payload_args": [
-        "__queued",
-        "human_readable_amount"
-      ],
+      "value_logic": {"type": "zero"},
+      "required_payload_args": ["__queued", "human_readable_amount"],
       "payload_args": {
-        "__queued": {
-          "source": "resolve_eigenlayer_queued_withdrawals"
-        },
-        "human_readable_amount": {
-          "source": "compute_human_readable",
-          "template": "complete EigenLayer withdrawal"
-        }
+        "__queued": {"source": "resolve_eigenlayer_queued_withdrawals"},
+        "human_readable_amount": {"source": "compute_human_readable", "template": "complete EigenLayer withdrawal"}
       },
       "param_mapping": [
-        {
-          "name": "withdrawal",
-          "source": "arg",
-          "arg_key": "__queued.withdrawal",
-          "coerce": "raw"
-        },
-        {
-          "name": "tokens",
-          "source": "arg",
-          "arg_key": "__queued.tokens",
-          "coerce": "address_array"
-        },
-        {
-          "name": "receiveAsTokens",
-          "source": "constant",
-          "value": true,
-          "coerce": "bool"
-        }
+        {"name": "withdrawal", "source": "arg", "arg_key": "__queued.withdrawal", "coerce": "raw"},
+        {"name": "tokens", "source": "arg", "arg_key": "__queued.tokens", "coerce": "address_array"},
+        {"name": "receiveAsTokens", "source": "constant", "value": true, "coerce": "bool"}
       ]
     }
   }
