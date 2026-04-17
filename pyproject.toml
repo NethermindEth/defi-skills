@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "defi-skills"
-version = "0.2.0"
+version = "0.3.0"
 description = "Multi-chain DeFi transaction builder — translates natural language into unsigned, ABI-encoded payloads across Ethereum, Arbitrum, Base, Optimism, Polygon, and Sepolia"
 readme = "README.md"
 license = {text = "MIT"}
