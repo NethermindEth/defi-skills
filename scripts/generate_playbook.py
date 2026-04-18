@@ -791,9 +791,10 @@ def main():
     print(f"\nStep 5: Validating...")
     valid = validate_playbook(playbook)
 
-    # Step 6: Write output
+    # Step 6: Write output (hybrid-formatted to match existing playbooks)
+    from format_playbooks import dumps as format_dumps
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text(json.dumps(playbook, indent=2, ensure_ascii=False))
+    output_path.write_text(format_dumps(playbook))
     print(f"\nPlaybook written to: {output_path}")
 
     if playbook.get("_review_notes", {}).get("review_items"):

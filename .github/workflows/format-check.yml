@@ -1,0 +1,28 @@
+name: Playbook format check
+
+on:
+  pull_request:
+    paths:
+      - "src/defi_skills/data/playbooks/**.json"
+      - "scripts/format_playbooks.py"
+      - ".github/workflows/format-check.yml"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run playbook formatter
+        run: python scripts/format_playbooks.py
+
+      - name: Fail if playbooks are not formatted
+        run: |
+          if ! git diff --exit-code src/defi_skills/data/playbooks/; then
+            echo "::error::Playbooks are not formatted. Run 'python scripts/format_playbooks.py' locally and commit the result."
+            exit 1
+          fi
