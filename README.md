@@ -184,6 +184,10 @@ pip install -e ".[dev]"
 pytest tests/ -v   # fully offline, no API keys needed
 ```
 
+## Official Links
+Website: https://defi-skills.nethermind.io/
+Telegram Group: https://t.me/defi_skills
+
 ## License
 
 [MIT](LICENSE)
