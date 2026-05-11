@@ -273,6 +273,11 @@ TEST_CASES = [
         id="aave_borrow_stable_rejected",
     ),
     pytest.param(
+        {"action": "aave_borrow", "arguments": {"asset": "USDT", "amount": "1000", "interest_rate_mode": "banana"}},
+        {"should_be_none": True},
+        id="aave_borrow_unknown_rate_mode_rejected",
+    ),
+    pytest.param(
         {"action": "aave_supply", "arguments": {"asset": "ETH", "amount": "1"}},
         {"should_raise": "ETH \\(native\\) is not supported"},
         id="aave_supply_eth_rejected",
@@ -574,6 +579,13 @@ TEST_CASES = [
         id="pendle_swap_pt_for_token",
     ),
     pytest.param(
+        {"action": "pendle_swap_pt_for_token", "arguments": {"asset_out": "WETH", "amount": "max", "market": "wstETH"}},
+        {"action": "pendle_swap_pt_for_token", "function_name": "swapExactPtForToken",
+         "target_contract": PENDLE_ROUTER, "selector": "0x594a88cc",
+         "args": {"amount": UINT256_MAX}},
+        id="pendle_swap_pt_for_token_max",
+    ),
+    pytest.param(
         {"action": "pendle_swap_token_for_yt", "arguments": {"asset": "WETH", "amount": "1", "market": "wstETH"}},
         {"action": "pendle_swap_token_for_yt", "function_name": "swapExactTokenForYt",
          "target_contract": PENDLE_ROUTER, "selector": "0xed48907e",
@@ -586,6 +598,13 @@ TEST_CASES = [
          "target_contract": PENDLE_ROUTER, "selector": "0x05eb5327",
          "args": {"asset_out": WETH_ADDR, "market": PENDLE_MARKET}},
         id="pendle_swap_yt_for_token",
+    ),
+    pytest.param(
+        {"action": "pendle_swap_yt_for_token", "arguments": {"asset_out": "WETH", "amount": "max", "market": "wstETH"}},
+        {"action": "pendle_swap_yt_for_token", "function_name": "swapExactYtForToken",
+         "target_contract": PENDLE_ROUTER, "selector": "0x05eb5327",
+         "args": {"amount": UINT256_MAX}},
+        id="pendle_swap_yt_for_token_max",
     ),
     pytest.param(
         {"action": "pendle_add_liquidity", "arguments": {"asset": "WETH", "amount": "1", "market": "wstETH"}},
@@ -614,6 +633,13 @@ TEST_CASES = [
          "target_contract": PENDLE_ROUTER, "selector": "0x47f1de22",
          "args": {"asset_out": WETH_ADDR, "yt_address": PENDLE_YT, "market": PENDLE_MARKET}},
         id="pendle_redeem_py",
+    ),
+    pytest.param(
+        {"action": "pendle_redeem_py", "arguments": {"asset_out": "WETH", "amount": "max", "market": "wstETH"}},
+        {"action": "pendle_redeem_py", "function_name": "redeemPyToToken",
+         "target_contract": PENDLE_ROUTER, "selector": "0x47f1de22",
+         "args": {"amount": UINT256_MAX}},
+        id="pendle_redeem_py_max",
     ),
     pytest.param(
         {"action": "pendle_claim_rewards", "arguments": {

@@ -209,7 +209,10 @@ def resolve_interest_rate_mode(value: Any, ctx: ResolveContext, **kwargs) -> int
             return 2
     except (ValueError, TypeError):
         pass
-    return default
+    raise ValueError(
+        f"resolve_interest_rate_mode: unsupported mode '{value}'. "
+        "Use 'variable' or '2'."
+    )
 
 
 def resolve_smart_amount(value: Any, ctx: ResolveContext, **kwargs) -> str:
