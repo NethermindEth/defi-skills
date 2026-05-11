@@ -136,7 +136,7 @@
           "description": "Token to receive — name (e.g. \"wstETH\") or address"
         },
         "amount": {
-          "source": "resolve_amount",
+          "source": "resolve_amount_or_max",
           "llm_field": "amount",
           "fallback_llm_fields": ["amount"],
           "decimals_from": "$asset_out",
@@ -345,7 +345,7 @@
           "description": "Token to receive — name (e.g. \"wstETH\") or address"
         },
         "amount": {
-          "source": "resolve_amount",
+          "source": "resolve_amount_or_max",
           "llm_field": "amount",
           "fallback_llm_fields": ["amount"],
           "decimals_from": "$asset_out",
@@ -730,7 +730,7 @@
           "description": "Token to receive — name (e.g. \"wstETH\") or address"
         },
         "amount": {
-          "source": "resolve_amount",
+          "source": "resolve_amount_or_max",
           "llm_field": "amount",
           "fallback_llm_fields": ["amount"],
           "decimals_from": "$asset_out",
